@@ -1,0 +1,79 @@
+{
+  "projectType": "general",
+  "projectName": "Rosy Music Bot",
+  "projectDescription": "A powerful and easy-to-use Discord music bot built with Discord.js and DisTube, featuring YouTube and Spotify playback support.",
+  "theme": "almond",
+  "primaryColor": "#aebd57",
+  "lightColor": "#26272c",
+  "darkColor": "#dbdbdd",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Setup & Configuration",
+        "pages": [
+          "setup/installation",
+          "setup/discord-bot-setup",
+          "setup/api-keys",
+          "setup/configuration"
+        ]
+      },
+      {
+        "group": "Commands",
+        "pages": [
+          "commands/overview",
+          "commands/play",
+          "commands/pause-resume",
+          "commands/skip-stop",
+          "commands/queue",
+          "commands/volume",
+          "commands/status"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/getting-started",
+          "guides/inviting-bot",
+          "guides/troubleshooting",
+          "guides/best-practices"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/architecture",
+          "development/project-structure",
+          "development/contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "YouTube and Spotify music playback",
+    "Interactive song search with selection menu",
+    "Queue management with loop modes",
+    "Volume control and playback controls",
+    "Real-time progress tracking with embeds",
+    "Multi-guild support",
+    "Easy configuration with environment variables",
+    "Comprehensive logging system"
+  ],
+  "publicApiSurface": [
+    "r!play <song|url>",
+    "r!pause",
+    "r!resume",
+    "r!skip",
+    "r!stop",
+    "r!queue",
+    "r!volume <1-100>",
+    "r!status",
+    "r!help"
+  ]
+}
