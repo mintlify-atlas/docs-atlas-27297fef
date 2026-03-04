@@ -1,0 +1,218 @@
+---
+title: Getting Started
+description: Complete beginner guide to setting up and using Rosy Music Bot
+---
+
+## Welcome to Rosy Music Bot
+
+Rosy is a powerful and easy-to-use Discord music bot built with Discord.js and Distube. This guide will walk you through everything you need to get started.
+
+## Prerequisites
+
+Before setting up Rosy Music Bot, make sure you have:
+
+- **Node.js** (version 18.17.0 or higher) - [Download here](https://nodejs.org/)
+- **npm** (normally comes with Node.js)
+- A **Discord Application** and bot token
+- **FFmpeg** (included in dependencies, but manual installation may be needed)
+
+<Note>
+The bot uses ffmpeg-static by default, but if you encounter issues, you may need to install FFmpeg manually.
+</Note>
+
+## Installation Steps
+
+### 1. Clone the Repository
+
+```bash
+git clone [repository-url]
+cd RosyMusicBot_estable
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+<Warning>
+After running `npm install`, you'll need to make a critical configuration change to fix playback issues. See the [Troubleshooting guide](/guides/troubleshooting) for the yt-dlp fix.
+</Warning>
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the root directory with the following:
+
+```env
+TOKEN=your_discord_token_here
+YOUTUBE_API_KEY=your_youtube_api_key
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+```
+
+<Tip>
+Keep your `.env` file secure and never commit it to version control. Add it to your `.gitignore` file.
+</Tip>
+
+### 4. Obtain Required API Keys
+
+#### Discord Bot Token
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application or select an existing one
+3. Navigate to the "Bot" section
+4. Copy the bot token
+
+#### YouTube API Key
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the YouTube Data API v3
+4. Create credentials and copy the API Key
+
+#### Spotify API Credentials
+
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new application
+3. Copy the Client ID and Client Secret
+
+### 5. Start the Bot
+
+```bash
+npm start
+```
+
+You should see a message confirming the bot is connected:
+
+```
+¡Bot conectado como [YourBotName]!
+```
+
+## First Time Configuration
+
+### Invite the Bot to Your Server
+
+See the [Inviting Bot guide](/guides/inviting-bot) for detailed instructions on generating an invite link and adding the bot to your server.
+
+### Required Permissions
+
+The bot needs the following permissions:
+
+- **Read Messages/View Channels** - To see commands
+- **Send Messages** - To respond to commands
+- **Embed Links** - To display rich embeds
+- **Connect** - To join voice channels
+- **Speak** - To play audio
+- **Use Voice Activity** - For voice playback
+
+## Running Your First Commands
+
+### Play a Song
+
+Join a voice channel and type:
+
+```
+r!play the scientist
+```
+
+Or use a direct URL:
+
+```
+r!play https://youtu.be/...
+```
+
+<Tip>
+When searching by song name, the bot will show you up to 5 results to choose from. You have 20 seconds to select a song from the menu.
+</Tip>
+
+### Basic Playback Controls
+
+```bash
+r!pause      # Pause current playback
+r!resume     # Resume playback
+r!skip       # Skip to next song
+r!stop       # Stop playback and clear queue
+```
+
+### Manage the Queue
+
+```bash
+r!queue      # View the current queue
+r!volume 50  # Set volume (1-100)
+```
+
+### Get Help
+
+```bash
+r!help       # Display all available commands
+```
+
+## Common Workflows
+
+### Playing Multiple Songs
+
+1. Use `r!play` to add the first song
+2. Continue using `r!play` to add more songs to the queue
+3. Use `r!queue` to see all queued songs
+4. Songs will play automatically in order
+
+### Managing Playback
+
+1. Join a voice channel before using commands
+2. Use `r!pause` if you need to pause temporarily
+3. Use `r!resume` to continue
+4. Use `r!skip` to jump to the next song
+5. Use `r!stop` to end the session and clear the queue
+
+### Adjusting Audio
+
+```bash
+r!volume 30  # Lower volume
+r!volume 80  # Higher volume
+```
+
+<Note>
+Volume is set per guild (server) and persists during the current session.
+</Note>
+
+## Tips for New Users
+
+<Tip>
+**Search Tips**: When searching by name, be specific. Include the artist name for better results:
+- Good: `r!play the scientist coldplay`
+- Less specific: `r!play scientist`
+</Tip>
+
+<Tip>
+**Multiple Results**: When the bot shows multiple search results, use the dropdown menu to select the correct song. The menu times out after 20 seconds.
+</Tip>
+
+<Tip>
+**Voice Channel**: Always join a voice channel before using music commands. The bot will remind you if you forget.
+</Tip>
+
+<Tip>
+**URL Support**: The bot supports both YouTube and Spotify URLs. Direct URLs are processed immediately without search.
+</Tip>
+
+## What's Next?
+
+Now that you have the basics down, explore:
+
+- [Inviting Bot](/guides/inviting-bot) - Add the bot to multiple servers
+- [Troubleshooting](/guides/troubleshooting) - Fix common issues
+- [Best Practices](/guides/best-practices) - Optimize your bot experience
+- [Commands Reference](/commands/overview) - Detailed command documentation
+
+## Getting Help
+
+If you encounter issues:
+
+1. Check the [Troubleshooting guide](/guides/troubleshooting)
+2. Verify all prerequisites are installed correctly
+3. Ensure your `.env` file has valid credentials
+4. Check the bot's console logs for error messages
+
+<Warning>
+If you see "NO_RESULT" or playback errors, you likely need to apply the yt-dlp fix. See the [Troubleshooting guide](/guides/troubleshooting#playback-errors) for the solution.
+</Warning>

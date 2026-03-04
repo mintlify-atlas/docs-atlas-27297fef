@@ -1,0 +1,579 @@
+---
+title: 'Contributing Guide'
+description: 'How to contribute to Rosy Music Bot development'
+icon: 'code-pull-request'
+---
+
+## How to Contribute
+
+Thank you for your interest in contributing to Rosy Music Bot! This guide will help you get started with development and submitting your changes.
+
+### Contribution Types
+
+We welcome contributions in several areas:
+
+- **New Commands** - Add new music or utility commands
+- **Bug Fixes** - Fix issues and improve stability
+- **Feature Enhancements** - Improve existing functionality
+- **Documentation** - Improve code comments and docs
+- **Testing** - Add tests and improve code coverage
+- **Performance** - Optimize code and reduce resource usage
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- Node.js 16.9.0 or higher
+- npm or yarn package manager
+- Git installed
+- A Discord bot token ([Discord Developer Portal](https://discord.com/developers/applications))
+- (Optional) Spotify API credentials for Spotify integration
+
+### Development Setup
+
+1. **Fork and clone the repository**
+
+```bash
+git clone https://github.com/yourusername/rosy-music-bot.git
+cd rosy-music-bot
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Configure environment variables**
+
+Copy `.env.example` to `.env` and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+TOKEN=your_discord_bot_token
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+```
+
+4. **Create a development branch**
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+5. **Start the bot**
+
+```bash
+node index.js
+```
+
+### Project Structure Overview
+
+Familiarize yourself with the codebase structure:
+
+```
+/commands/music/     - Music command files
+/events/client/      - Discord client event handlers
+/events/distube/     - DisTube music event handlers
+/handlers/           - Dynamic loaders for commands and events
+/utils/              - Utility modules (embeds, logger, controls, etc.)
+index.js             - Bot entry point
+config.js            - Configuration settings
+```
+
+For detailed structure information, see [Project Structure](/development/project-structure).
+
+## Code Style Guidelines
+
+### General Principles
+
+- **Write clean, readable code** - Code should be self-documenting
+- **Follow existing patterns** - Maintain consistency with the codebase
+- **Comment complex logic** - Explain the "why", not the "what"
+- **Use descriptive names** - Variables and functions should be self-explanatory
+- **Handle errors gracefully** - Always catch and log errors properly
+
+### JavaScript Style
+
+**Indentation and Spacing**
+- Use 4 spaces for indentation (not tabs)
+- Add blank lines between logical sections
+- Use single quotes for strings
+
+**Naming Conventions**
+```javascript
+// Variables and functions: camelCase
+const myVariable = 'value';
+function doSomething() {}
+
+// Classes: PascalCase
+class MusicPlayer {}
+
+// Constants: UPPER_SNAKE_CASE
+const MAX_VOLUME = 100;
+
+// File names: camelCase.js or lowercase.js
+// Commands: play.js, skip.js
+// Utils: musicControls.js, progressUpdater.js
+```
+
+**Async/Await**
+Always use async/await instead of promises:
+
+```javascript
+// Good
+async execute(message, args, client) {
+    try {
+        const result = await client.distube.play(voiceChannel, query);
+    } catch (error) {
+        Logger.error('Error', error, 'command.js');
+    }
+}
+
+// Avoid
+execute(message, args, client) {
+    client.distube.play(voiceChannel, query)
+        .then(result => { })
+        .catch(error => { });
+}
+```
+
+**Error Handling**
+Always use try-catch blocks and the Logger utility:
+
+```javascript
+try {
+    await someAsyncOperation();
+} catch (error) {
+    Logger.error('Operation failed', error, 'filename.js');
+    message.reply({ embeds: [createErrorEmbed('Error', 'User-friendly message')] });
+}
+```
+
+**Imports**
+Organize imports logically:
+
+```javascript
+// Discord.js imports
+const { EmbedBuilder, ActionRowBuilder } = require('discord.js');
+
+// Local utility imports
+const { createErrorEmbed } = require('../../utils/embeds');
+const Logger = require('../../utils/logger');
+
+// External library imports
+const playdl = require('play-dl');
+```
+
+### Logging Standards
+
+Use the Logger utility for all logging:
+
+```javascript
+const Logger = require('../utils/logger');
+
+// Music events
+Logger.music('Song started', 'play.js');
+
+// DisTube events
+Logger.distube('Queue created', 'playSong.js');
+
+// Commands
+Logger.command('play', message.author.tag, message.guild.name);
+
+// Errors (includes stack trace)
+Logger.error('Failed to connect', error, 'play.js');
+
+// Warnings
+Logger.warn('User not in voice channel', 'play.js');
+
+// Success messages
+Logger.success('Command loaded', 'commands.js');
+```
+
+### Embed Standards
+
+Always use the embed factory functions from `utils/embeds.js`:
+
+```javascript
+const { createErrorEmbed, createInfoEmbed, createNowPlayingEmbed } = require('../utils/embeds');
+
+// Error messages
+const errorEmbed = createErrorEmbed(
+    'Error Title',
+    'Detailed error description with user guidance'
+);
+
+// Information messages
+const infoEmbed = createInfoEmbed(
+    'Info Title',
+    'Information for the user'
+);
+
+// Custom embeds (use consistent colors)
+const { COLORS } = require('../utils/embeds');
+const embed = new EmbedBuilder()
+    .setColor(COLORS.INFO)
+    .setTitle('Title')
+    .setDescription('Description');
+```
+
+## Adding New Commands
+
+### Command Template
+
+Create a new file in `/commands/music/yourcommand.js`:
+
+```javascript
+const { createErrorEmbed, createInfoEmbed } = require('../../utils/embeds');
+const Logger = require('../../utils/logger');
+
+module.exports = {
+    name: 'yourcommand',
+    description: 'Brief description of what this command does',
+    async execute(message, args, client) {
+        // 1. Validate voice channel
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel) {
+            Logger.warn(`${message.author.tag} not in voice channel`, 'yourcommand.js');
+            const embed = createErrorEmbed(
+                'Not in Voice Channel',
+                'You must be in a voice channel to use this command.'
+            );
+            return message.reply({ embeds: [embed] });
+        }
+
+        // 2. Get DisTube queue
+        const queue = client.distube.getQueue(message.guildId);
+        if (!queue) {
+            const embed = createErrorEmbed(
+                'No Active Queue',
+                'There is no music playing right now.'
+            );
+            return message.reply({ embeds: [embed] });
+        }
+
+        // 3. Implement your command logic
+        try {
+            // Your code here
+            Logger.command('yourcommand', message.author.tag, message.guild.name);
+            
+            const embed = createInfoEmbed(
+                'Success',
+                'Command executed successfully'
+            );
+            message.reply({ embeds: [embed] });
+            
+        } catch (error) {
+            Logger.error('Error in yourcommand', error, 'yourcommand.js');
+            const embed = createErrorEmbed(
+                'Command Failed',
+                'An error occurred while executing the command.'
+            );
+            message.reply({ embeds: [embed] });
+        }
+    }
+};
+```
+
+### Command Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always validate user permissions">
+    ```javascript
+    // Check if user is in voice channel
+    const voiceChannel = message.member.voice.channel;
+    if (!voiceChannel) {
+        return message.reply({ embeds: [createErrorEmbed('Error', 'Join a voice channel first')] });
+    }
+
+    // Check if user is in same channel as bot
+    if (queue && voiceChannel.id !== queue.voiceChannel?.id) {
+        return message.reply({ embeds: [createErrorEmbed('Error', 'You must be in the same voice channel as the bot')] });
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Provide clear error messages">
+    ```javascript
+    // Bad - Generic error
+    message.reply('Error');
+
+    // Good - Descriptive error with guidance
+    const embed = createErrorEmbed(
+        'Invalid Volume',
+        'Volume must be between 0 and 100.\n\n**Example:** `r!volume 50`'
+    );
+    message.reply({ embeds: [embed] });
+    ```
+  </Accordion>
+
+  <Accordion title="Use try-catch for async operations">
+    ```javascript
+    try {
+        await client.distube.play(voiceChannel, query, {
+            member: message.member,
+            textChannel: message.channel,
+            message: message
+        });
+    } catch (error) {
+        Logger.error('Play command error', error, 'play.js');
+        message.reply({ embeds: [createErrorEmbed('Playback Error', error.message)] });
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Log important actions">
+    ```javascript
+    Logger.command('play', message.author.tag, message.guild.name);
+    Logger.music(`Playing: ${song.name}`, 'play.js');
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Testing Your Command
+
+1. **Restart the bot** - Commands are loaded on startup
+2. **Test in Discord** - Try the command: `r!yourcommand`
+3. **Test edge cases**:
+   - Without voice channel
+   - With invalid arguments
+   - During active playback
+   - Without active playback
+4. **Check logs** - Verify logging is working correctly
+5. **Test error handling** - Ensure errors are caught and displayed
+
+## Adding New Events
+
+### Event Template
+
+Create a new file in `/events/client/` or `/events/distube/`:
+
+```javascript
+const Logger = require('../../utils/logger');
+const { createInfoEmbed } = require('../../utils/embeds');
+
+module.exports = (client) => {
+    // For Discord client events
+    client.on('eventName', async (param1, param2) => {
+        try {
+            Logger.info('Event triggered', 'eventName.js');
+            
+            // Event handling logic
+            
+        } catch (error) {
+            Logger.error('Event error', error, 'eventName.js');
+        }
+    });
+    
+    // For DisTube events
+    client.distube.on('eventName', async (queue, song) => {
+        try {
+            Logger.distube('DisTube event triggered', 'eventName.js');
+            
+            // Event handling logic
+            
+        } catch (error) {
+            Logger.error('DisTube event error', error, 'eventName.js');
+        }
+    });
+};
+```
+
+### Available Event Types
+
+**Discord Client Events:**
+- `messageCreate` - New message sent
+- `interactionCreate` - Button/slash command interaction
+- `voiceStateUpdate` - User joins/leaves voice channel
+- `guildCreate` - Bot joins new server
+
+**DisTube Events:**
+- `playSong` - Song starts playing
+- `addSong` - Song added to queue
+- `finish` - Queue finished
+- `error` - Playback error
+- `disconnect` - Bot disconnects from voice
+
+See [Discord.js Events](https://discord.js.org/#/docs/discord.js/main/class/Client) and [DisTube Events](https://distube.js.org/#/docs/DisTube/main/class/DisTube) for full lists.
+
+## Testing Changes
+
+### Manual Testing Checklist
+
+Before submitting changes, test the following:
+
+- [ ] Bot starts without errors
+- [ ] Commands load successfully
+- [ ] Events are registered
+- [ ] Voice connection works
+- [ ] Music playback functions correctly
+- [ ] Error messages are user-friendly
+- [ ] Logging is working
+- [ ] No console errors during operation
+
+### Testing in a Development Server
+
+1. Create a test Discord server
+2. Invite your development bot
+3. Test all affected functionality
+4. Verify behavior with multiple users
+5. Test edge cases and error conditions
+
+### Debugging Tips
+
+**Enable detailed logging:**
+```javascript
+// Add verbose logging
+Logger.info('Debug point 1', 'filename.js');
+Logger.info(`Variable value: ${JSON.stringify(data)}`, 'filename.js');
+```
+
+**Check DisTube events:**
+```javascript
+client.distube.on('debug', (message) => {
+    console.log('[DEBUG]', message);
+});
+```
+
+**Monitor voice connection:**
+```javascript
+const { generateDependencyReport } = require('@discordjs/voice');
+console.log(generateDependencyReport());
+```
+
+## Pull Request Process
+
+### Before Submitting
+
+1. **Ensure your code follows style guidelines**
+2. **Test thoroughly** - Verify all functionality works
+3. **Update documentation** - If adding features, update relevant docs
+4. **Write clear commit messages** - Follow conventional commits format
+5. **Squash unnecessary commits** - Keep history clean
+
+### Commit Message Format
+
+Use conventional commits:
+
+```bash
+# Feature
+git commit -m "feat: add shuffle command"
+
+# Bug fix
+git commit -m "fix: resolve queue clear issue on stop"
+
+# Documentation
+git commit -m "docs: update contributing guide"
+
+# Refactor
+git commit -m "refactor: improve embed creation logic"
+
+# Performance
+git commit -m "perf: optimize progress updater intervals"
+```
+
+### Creating a Pull Request
+
+1. **Push your branch to your fork**
+
+```bash
+git push origin feature/your-feature-name
+```
+
+2. **Create PR on GitHub**
+
+- Go to the original repository
+- Click "Pull Requests" > "New Pull Request"
+- Select your fork and branch
+- Fill in the PR template
+
+3. **PR Description Template**
+
+```markdown
+## Description
+Brief description of what this PR does
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Changes Made
+- Added X feature
+- Fixed Y bug
+- Improved Z functionality
+
+## Testing
+Describe how you tested these changes
+
+## Screenshots (if applicable)
+Add screenshots showing new features or fixes
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Tested thoroughly
+- [ ] Updated documentation
+- [ ] No new warnings or errors
+```
+
+4. **Respond to feedback**
+
+- Address review comments promptly
+- Make requested changes
+- Update PR description if scope changes
+
+### PR Review Process
+
+Your PR will be reviewed for:
+
+- Code quality and style consistency
+- Functionality and correctness
+- Error handling and edge cases
+- Documentation completeness
+- Performance implications
+
+## Code of Conduct
+
+### Our Standards
+
+- **Be respectful** - Treat all contributors with respect
+- **Be collaborative** - Work together to improve the bot
+- **Be patient** - Reviews and feedback take time
+- **Be constructive** - Provide helpful, actionable feedback
+- **Be inclusive** - Welcome contributors of all skill levels
+
+### Unacceptable Behavior
+
+- Harassment or discriminatory comments
+- Trolling or insulting remarks
+- Personal or political attacks
+- Publishing private information
+- Other unprofessional conduct
+
+## Getting Help
+
+If you need assistance:
+
+- **Documentation** - Check [Project Structure](/development/project-structure) and [Architecture](/development/architecture)
+- **Issues** - Search existing issues or create a new one
+- **Discord** - Join our development Discord (link in README)
+- **Code Review** - Ask questions in PR comments
+
+## Recognition
+
+Contributors are recognized in:
+
+- GitHub contributors list
+- CHANGELOG.md for significant contributions
+- Bot credits command output
+
+Thank you for contributing to Rosy Music Bot!

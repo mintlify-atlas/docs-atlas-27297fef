@@ -1,0 +1,103 @@
+---
+title: 'Commands Overview'
+description: 'Complete guide to all Rosy Music Bot commands'
+icon: 'list'
+---
+
+## Command Prefix
+
+All commands use the prefix `r!`
+
+## Available Commands
+
+<CardGroup cols={2}>
+  <Card title="Play Music" icon="play" href="/commands/play">
+    Play songs from YouTube or Spotify with interactive search
+  </Card>
+  <Card title="Queue Management" icon="list-music" href="/commands/queue">
+    View and manage your music queue
+  </Card>
+  <Card title="Playback Control" icon="pause" href="/commands/pause-resume">
+    Pause and resume music playback
+  </Card>
+  <Card title="Skip & Stop" icon="forward" href="/commands/skip-stop">
+    Skip songs or stop playback completely
+  </Card>
+  <Card title="Volume Control" icon="volume" href="/commands/volume">
+    Adjust playback volume (0-100)
+  </Card>
+  <Card title="Bot Status" icon="info" href="/commands/status">
+    Check bot status, permissions, and queue info
+  </Card>
+</CardGroup>
+
+## Commands Table
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `r!play` | Play a song or add to queue | `r!play <song\|url>` |
+| `r!pause` | Pause current playback | `r!pause` |
+| `r!resume` | Resume paused playback | `r!resume` |
+| `r!skip` | Skip to next song | `r!skip [position]` |
+| `r!stop` | Stop playback and clear queue | `r!stop` |
+| `r!queue` | Display current queue | `r!queue` |
+| `r!volume` | Adjust or check volume | `r!volume [0-100]` |
+| `r!status` | Show bot status and info | `r!status` |
+| `r!help` | Display help message | `r!help` |
+
+## Command Categories
+
+### Music Playback
+- **r!play** - Start playing music with search or URL
+- **r!pause** - Temporarily pause playback
+- **r!resume** - Continue playing after pause
+- **r!skip** - Move to next song in queue
+- **r!stop** - Stop completely and clear queue
+
+### Queue Management
+- **r!queue** - View all songs in the queue
+- **r!skip [position]** - Jump to specific song position
+
+### Audio Control
+- **r!volume** - Control playback volume (0-100%)
+
+### Information
+- **r!status** - Bot status, permissions, and queue info
+- **r!help** - List all available commands
+
+## Quick Start Examples
+
+```bash
+# Play a song by name
+r!play the scientist
+
+# Play from YouTube URL
+r!play https://youtu.be/dQw4w9WgXcQ
+
+# View queue
+r!queue
+
+# Set volume to 50%
+r!volume 50
+
+# Skip to next song
+r!skip
+
+# Check bot status
+r!status
+```
+
+## Requirements
+
+<Note>
+You must be in a voice channel to use music playback commands. The bot needs `Connect` and `Speak` permissions in your voice channel.
+</Note>
+
+## Error Messages
+
+The bot provides helpful error messages when:
+- You're not in a voice channel
+- The bot lacks permissions
+- No song is found
+- Invalid parameters are provided
+- No music is currently playing

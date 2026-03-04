@@ -1,0 +1,266 @@
+---
+title: 'Volume Command'
+description: 'Control playback volume from 0-100%'
+icon: 'volume'
+---
+
+## Overview
+
+The `r!volume` command adjusts or displays the current playback volume. Volume ranges from 0 (muted) to 100 (maximum).
+
+## Usage
+
+```bash
+r!volume [level]
+```
+
+<ParamField path="level" type="number" optional>
+  Volume level between 0-100. Omit to check current volume.
+</ParamField>
+
+## Set Volume
+
+Adjust playback volume to a specific level:
+
+```bash
+# Set volume to 50%
+r!volume 50
+# 🔊 Volumen ajustado a: `50%`
+
+# Set volume to maximum
+r!volume 100
+# 🔊 Volumen ajustado a: `100%`
+
+# Mute (set to 0)
+r!volume 0
+# 🔊 Volumen ajustado a: `0%`
+```
+
+## Check Current Volume
+
+Omit the level parameter to check current volume:
+
+```bash
+r!volume
+# 🔊 Volumen actual: `75%`
+```
+
+## Implementation
+
+From `commands/music/volume.js:4-20`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+    if (!queue) return message.reply('❌ ¡No hay nada reproduciéndose!');
+
+    const volume = parseInt(args[0]);
+    if (isNaN(volume)) {
+        return message.reply(`🔊 Volumen actual: \`${queue.volume}%\``);
+    }
+
+    if (volume < 0 || volume > 100) {
+        return message.reply('❌ ¡Por favor especifica un número entre 0 y 100!');
+    }
+
+    queue.setVolume(volume);
+    message.reply(`🔊 Volumen ajustado a: \`${volume}%\``);
+}
+```
+
+## Volume Behavior
+
+<Steps>
+  <Step title="Validate Queue">
+    Checks if music is currently playing
+  </Step>
+  <Step title="Parse Input">
+    - No input: Return current volume
+    - Number provided: Validate range 0-100
+  </Step>
+  <Step title="Apply Volume">
+    Uses DisTube's `setVolume()` method to adjust playback
+  </Step>
+  <Step title="Confirm Change">
+    Sends confirmation message with new volume level
+  </Step>
+</Steps>
+
+## Valid Volume Range
+
+<ParamField path="Minimum" type="0">
+  Mutes audio completely (0%)
+</ParamField>
+
+<ParamField path="Maximum" type="100">
+  Maximum volume (100%)
+</ParamField>
+
+<Warning>
+Values outside 0-100 range are rejected
+</Warning>
+
+## Requirements
+
+<Check>Music must be currently playing</Check>
+<Check>An active queue must exist</Check>
+
+## Error Messages
+
+### No Music Playing
+
+```bash
+r!volume 50
+# ❌ ¡No hay nada reproduciéndose!
+```
+
+### Invalid Range
+
+```bash
+r!volume 150
+# ❌ ¡Por favor especifica un número entre 0 y 100!
+
+r!volume -10
+# ❌ ¡Por favor especifica un número entre 0 y 100!
+```
+
+### Invalid Input
+
+```bash
+r!volume abc
+# 🔊 Volumen actual: `75%`
+```
+
+<Note>
+Non-numeric input returns current volume instead of error
+</Note>
+
+## Common Volume Levels
+
+<CardGroup cols={2}>
+  <Card title="Quiet (25%)" icon="volume-low">
+    Background music during conversation
+  </Card>
+  <Card title="Normal (50%)" icon="volume">
+    Balanced volume for casual listening
+  </Card>
+  <Card title="Loud (75%)" icon="volume-high">
+    Energetic listening sessions
+  </Card>
+  <Card title="Maximum (100%)" icon="volume-high">
+    Full volume for parties/events
+  </Card>
+</CardGroup>
+
+## Volume Examples
+
+### Typical Use Cases
+
+```bash
+# Background music
+r!volume 30
+
+# Normal listening
+r!volume 60
+
+# Party mode
+r!volume 90
+
+# Quick mute
+r!volume 0
+```
+
+### Check Before Adjusting
+
+```bash
+# Check current level
+r!volume
+# 🔊 Volumen actual: `45%`
+
+# Increase it
+r!volume 70
+# 🔊 Volumen ajustado a: `70%`
+```
+
+## Volume Persistence
+
+Volume settings:
+
+<Check>Persist during current session</Check>
+<Check>Apply to all songs in queue</Check>
+<Check>Apply instantly to current playback</Check>
+<Warning>Reset when bot disconnects</Warning>
+
+## DisTube Volume Methods
+
+The command uses DisTube's queue volume management:
+
+```javascript
+queue.volume           // Get current volume (0-100)
+queue.setVolume(level) // Set new volume level
+```
+
+Volume changes are applied immediately to the active audio stream.
+
+## Best Practices
+
+<Tip>
+Start at 50% and adjust up or down based on preference
+</Tip>
+
+<Tip>
+Consider Discord's user volume settings - they multiply with bot volume
+</Tip>
+
+<Warning>
+Very high volumes (90-100%) may cause audio distortion
+</Warning>
+
+## Related Commands
+
+- `r!play` - Start playing music
+- `r!pause` - Pause playback (preserves volume)
+- `r!resume` - Resume at same volume level
+- `r!status` - View bot status
+
+## Discord Volume Interaction
+
+Users can also adjust volume individually:
+
+1. **Bot Volume**: Set with `r!volume` command (affects everyone)
+2. **User Volume**: Right-click bot in voice → Adjust user volume (personal)
+3. **Final Volume**: Bot volume × User volume
+
+<Info>
+If bot volume is 50% and user sets personal volume to 50%, final volume is 25%
+</Info>
+
+## Tips for Different Scenarios
+
+### Voice Chat with Music
+
+```bash
+r!volume 25
+# Low enough for conversation
+```
+
+### Music Focus Session
+
+```bash
+r!volume 70
+# Higher for immersive listening
+```
+
+### Late Night Listening
+
+```bash
+r!volume 35
+# Quieter to avoid disturbing others
+```
+
+### Event/Party
+
+```bash
+r!volume 95
+# Near maximum for energetic atmosphere
+```

@@ -1,0 +1,233 @@
+---
+title: 'Queue Command'
+description: 'View and manage your music queue'
+icon: 'list-music'
+---
+
+## Overview
+
+The `r!queue` command displays all songs currently in the queue, including the now playing song and upcoming tracks.
+
+## Usage
+
+```bash
+r!queue
+```
+
+## Display Format
+
+The queue displays in the following format:
+
+```
+🎵 Canciones en la cola:
+🎶 Ahora: Currently Playing Song
+1. Next Song
+2. Third Song  
+3. Fourth Song
+...
+```
+
+### Example Output
+
+```bash
+r!queue
+
+🎵 Canciones en la cola:
+🎶 Ahora: The Scientist - Coldplay
+1. Bohemian Rhapsody - Queen
+2. Stairway to Heaven - Led Zeppelin
+3. Hotel California - Eagles
+```
+
+## Implementation
+
+From `commands/music/queue.js:4-15`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+
+    if (!queue) {
+        return message.reply('❌ No hay ninguna canción reproduciéndose.');
+    }
+
+    const songList = queue.songs.map((song, index) => 
+        `${index === 0 ? '🎶 Ahora' : `${index}.`} ${song.name}`
+    ).join('\n');
+
+    message.channel.send(`🎵 **Canciones en la cola:**\n${songList}`);
+}
+```
+
+## Queue Structure
+
+<Steps>
+  <Step title="Index 0: Now Playing">
+    The first song (index 0) is the currently playing track, marked with "🎶 Ahora"
+  </Step>
+  <Step title="Index 1+: Upcoming Songs">
+    All subsequent songs are numbered 1, 2, 3, etc. and will play in that order
+  </Step>
+  <Step title="Song Names">
+    Each entry shows the song name as returned by DisTube
+  </Step>
+</Steps>
+
+## Requirements
+
+<Check>Music must be currently playing or queued</Check>
+
+## Error Messages
+
+### No Queue Active
+
+```bash
+r!queue
+# ❌ No hay ninguna canción reproduciéndose.
+```
+
+This error appears when:
+- No music is playing
+- The queue is empty
+- No songs have been added yet
+
+## Queue Information
+
+The queue command shows:
+
+<CardGroup cols={2}>
+  <Card title="Now Playing" icon="music">
+    Currently playing song marked with 🎶 Ahora
+  </Card>
+  <Card title="Upcoming Songs" icon="list-ol">
+    All songs waiting to be played, in order
+  </Card>
+  <Card title="Song Count" icon="hashtag">
+    Implicit count from numbered list
+  </Card>
+  <Card title="Play Order" icon="arrow-down-1-9">
+    Exact order songs will play
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+### Check What's Playing
+
+```bash
+r!queue
+# See the current song and upcoming tracks
+```
+
+### Before Skipping
+
+```bash
+# View queue to choose skip position
+r!queue
+r!skip 3  # Skip to third song
+```
+
+### After Adding Songs
+
+```bash
+r!play bohemian rhapsody
+r!play hotel california
+r!queue  # See both songs added
+```
+
+### Monitor Queue Length
+
+```bash
+r!queue
+# Count how many songs are waiting
+```
+
+## Queue Management
+
+While this command only displays the queue, you can manage it with:
+
+- `r!play <song>` - Add songs to queue
+- `r!skip` - Skip to next song
+- `r!skip [position]` - Jump to specific song
+- `r!stop` - Clear entire queue
+
+## DisTube Queue Object
+
+The command uses DisTube's queue structure:
+
+```javascript
+queue.songs  // Array of all songs
+  [0]        // Currently playing (🎶 Ahora)
+  [1..n]     // Upcoming songs (numbered 1, 2, 3...)
+```
+
+Each song object contains:
+- `song.name` - Song title
+- `song.url` - Source URL
+- `song.duration` - Length in seconds
+- `song.user` - User who added the song
+
+## Example Scenarios
+
+### Single Song
+
+```bash
+r!play despacito
+r!queue
+
+🎵 Canciones en la cola:
+🎶 Ahora: Despacito - Luis Fonsi
+```
+
+### Multiple Songs
+
+```bash
+r!play the scientist
+r!play fix you
+r!play yellow
+r!queue
+
+🎵 Canciones en la cola:
+🎶 Ahora: The Scientist - Coldplay
+1. Fix You - Coldplay
+2. Yellow - Coldplay
+```
+
+### After Skip
+
+```bash
+# Before skip
+r!queue
+🎶 Ahora: Song A
+1. Song B
+2. Song C
+
+r!skip
+
+# After skip  
+r!queue
+🎶 Ahora: Song B
+1. Song C
+```
+
+## Related Commands
+
+- `r!play` - Add songs to the queue
+- `r!skip` - Move to next song in queue
+- `r!skip [position]` - Jump to specific queue position
+- `r!stop` - Clear entire queue
+- `r!status` - See queue count in bot status
+
+## Tips
+
+<Tip>
+Use `r!queue` before `r!skip [position]` to see exact song positions
+</Tip>
+
+<Tip>
+The queue shows songs in the exact order they will play
+</Tip>
+
+<Info>
+Song names come directly from YouTube/Spotify metadata
+</Info>

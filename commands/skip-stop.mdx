@@ -1,0 +1,235 @@
+---
+title: 'Skip & Stop'
+description: 'Skip songs or stop playback completely'
+icon: 'forward'
+---
+
+## Overview
+
+Control queue progression with skip and stop commands. Skip moves to the next song, while stop ends playback entirely.
+
+## Skip Command
+
+Skip to the next song in the queue or jump to a specific position.
+
+### Usage
+
+```bash
+r!skip [position]
+```
+
+<ParamField path="position" type="number" optional>
+  Optional: Jump to specific song position in queue (2 or higher)
+</ParamField>
+
+### Basic Skip
+
+Skip to the next song:
+
+```bash
+r!skip
+# ⏭️ ¡Canción saltada!
+```
+
+### Skip to Position
+
+Jump to a specific song in the queue:
+
+```bash
+# Skip to song #3 in queue
+r!skip 3
+# ⏭️ Saltando a: `Song Name`
+```
+
+### Implementation
+
+From `commands/music/skip.js:4-26`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+    if (!queue) return message.reply('❌ ¡No hay nada reproduciéndose!');
+    
+    try {
+        if (args.length > 0) {
+            const position = parseInt(args[0]);
+            if (!isNaN(position) && position > 1 && position <= queue.songs.length) {
+                // Jump to specific position
+                queue.jump(position - 1); // DisTube uses 0-based index
+                return message.reply(`⏭️ Saltando a: \`${queue.songs[position - 1].name}\``);
+            } else {
+                return message.reply('❌ Posición inválida.');
+            }
+        }
+
+        queue.skip();
+        message.reply('⏭️ ¡Canción saltada!');
+    } catch (e) {
+        message.reply('❌ ¡No hay más canciones en la cola!');
+    }
+}
+```
+
+### Skip Behavior
+
+<Steps>
+  <Step title="Validate Queue">
+    Checks if music is playing
+  </Step>
+  <Step title="Parse Position">
+    If position provided, validates it's valid number within queue range
+  </Step>
+  <Step title="Execute Skip">
+    - Basic: Calls `queue.skip()` to move to next song
+    - Position: Calls `queue.jump(position - 1)` to jump to specific song
+  </Step>
+  <Step title="Handle Errors">
+    Catches error if no more songs in queue
+  </Step>
+</Steps>
+
+## Stop Command
+
+Completely stop playback and clear the entire queue.
+
+### Usage
+
+```bash
+r!stop
+```
+
+### Behavior
+
+```bash
+r!stop
+# ⏹️ ¡Música detenida!
+```
+
+<Warning>
+Stopping clears the entire queue - you cannot resume after stopping
+</Warning>
+
+### Implementation
+
+From `commands/music/stop.js:4-11`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+    if (!queue) return message.reply('¡No hay nada reproduciéndose!');
+    
+    queue.stop();
+    message.reply('⏹️ ¡Música detenida!');
+}
+```
+
+### Stop vs Pause
+
+| Feature | Stop | Pause |
+|---------|------|-------|
+| Clears queue | ✅ Yes | ❌ No |
+| Can resume | ❌ No | ✅ Yes |
+| Disconnects bot | ✅ Yes | ❌ No |
+| Use case | End session | Temporary break |
+
+## Requirements
+
+<Check>Music must be currently playing</Check>
+<Check>An active queue must exist</Check>
+
+## Error Messages
+
+### No Music Playing
+
+```bash
+r!skip
+# ❌ ¡No hay nada reproduciéndose!
+```
+
+### No More Songs in Queue
+
+```bash
+r!skip
+# ❌ ¡No hay más canciones en la cola!
+```
+
+### Invalid Position
+
+```bash
+r!skip 999
+# ❌ Posición inválida.
+
+r!skip 1
+# ❌ Posición inválida. (Position must be > 1)
+```
+
+## Skip Position Examples
+
+View your queue first:
+
+```bash
+r!queue
+# 🎶 Ahora: Song A
+# 1. Song B  
+# 2. Song C
+# 3. Song D
+# 4. Song E
+```
+
+Then skip to specific position:
+
+```bash
+# Skip to Song C (position 3 in the list)
+r!skip 3
+# ⏭️ Saltando a: `Song C`
+```
+
+<Note>
+Position must be 2 or higher. Position 1 is the current song, so use `r!skip` without arguments to move to position 1.
+</Note>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Skip Unpopular Song" icon="forward-step">
+    Quickly move past songs people don't want to hear
+  </Card>
+  <Card title="Jump to Request" icon="bullseye">
+    Jump directly to a specific requested song
+  </Card>
+  <Card title="End Session" icon="stop">
+    Use stop to end the music session completely
+  </Card>
+  <Card title="Clear Queue" icon="trash">
+    Stop command clears entire queue at once
+  </Card>
+</CardGroup>
+
+## DisTube Methods
+
+The commands use DisTube's queue methods:
+
+- `queue.skip()` - Skip to next song
+- `queue.jump(index)` - Jump to specific position (0-based)
+- `queue.stop()` - Stop playback and clear queue
+- `queue.songs.length` - Total songs in queue
+
+## Related Commands
+
+- `r!queue` - View all songs in queue before skipping
+- `r!pause` - Temporarily pause instead of skipping
+- `r!play` - Add more songs to queue
+
+## Tips
+
+<Tip>
+Use `r!queue` first to see song positions before using `r!skip [position]`
+</Tip>
+
+<Tip>
+For temporary breaks, use `r!pause` instead of `r!stop` to preserve your queue
+</Tip>
+
+<Warning>
+`r!stop` is destructive - it clears the entire queue and cannot be undone
+</Warning>

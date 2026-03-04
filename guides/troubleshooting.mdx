@@ -1,0 +1,568 @@
+---
+title: Troubleshooting
+description: Solutions to common issues with Rosy Music Bot
+---
+
+## Overview
+
+This guide covers common issues you might encounter with Rosy Music Bot and their solutions. If you don't find your issue here, check the console logs for more detailed error messages.
+
+## Playback Errors
+
+<Accordion title="NO_RESULT Error or Playback Fails">
+### Problem
+
+The bot returns "NO_RESULT" error or fails to play music after searching for songs.
+
+### Critical Solution
+
+After running `npm install`, you must edit the yt-dlp configuration file:
+
+**File Path**: `node_modules/@distube/yt-dlp/dist/index.js`
+
+**Find lines with `noCallHome: true`** (approximately at lines 147 and 177) and **comment them out**:
+
+```javascript
+// noCallHome: true,
+```
+
+### Why This Happens
+
+The `noCallHome: true` parameter causes playback errors with yt-dlp. Commenting it out fixes the issue.
+
+### Steps
+
+1. Navigate to `node_modules/@distube/yt-dlp/dist/index.js`
+2. Search for `noCallHome: true` (appears twice)
+3. Add `//` at the beginning of both lines
+4. Save the file
+5. Restart the bot with `npm start`
+
+<Warning>
+**Important**: You'll need to repeat this fix every time you run `npm install` as it reinstalls the dependencies.
+</Warning>
+
+### Prevention
+
+Consider creating a post-install script to automate this fix:
+
+```json
+// In package.json
+"scripts": {
+  "postinstall": "sed -i 's/noCallHome: true,/\/\/ noCallHome: true,/g' node_modules/@distube/yt-dlp/dist/index.js"
+}
+```
+</Accordion>
+
+<Accordion title="Video Unavailable or Not Found">
+### Problem
+
+Error message: "Canción no disponible" or "Video unavailable"
+
+### Possible Causes
+
+- The video is region-locked
+- The video has been removed by the uploader
+- The video is private or unlisted
+- Age-restricted content
+
+### Solutions
+
+1. **Try a different video**: Search for an alternative version of the song
+2. **Use official channels**: Official music videos are less likely to be removed
+3. **Check video accessibility**: Open the URL in a browser to verify it's available
+
+```bash
+# Try with a direct YouTube URL
+r!play https://youtube.com/watch?v=VIDEO_ID
+```
+</Accordion>
+
+<Accordion title="Age-Restricted Content Error">
+### Problem
+
+Error: "Contenido restringido por edad" or "age restricted"
+
+### Cause
+
+The video requires age verification on YouTube.
+
+### Solution
+
+Unfortunately, the bot cannot play age-restricted content. Try:
+
+1. Find an alternative version of the song
+2. Use the official music video if available
+3. Search for a live performance or cover version
+</Accordion>
+
+## FFmpeg Errors
+
+<Accordion title="FFmpeg Not Found or Installation Issues">
+### Problem
+
+Errors related to FFmpeg not being found or audio encoding failures.
+
+### Solution 1: Use Included FFmpeg
+
+The bot includes `ffmpeg-static` by default. If this doesn't work, try manual installation.
+
+### Solution 2: Manual Installation
+
+#### Windows (using Chocolatey)
+
+1. Install [Chocolatey](https://chocolatey.org/install)
+2. Open PowerShell as administrator:
+
+```powershell
+choco install ffmpeg
+```
+
+3. Restart your terminal or computer
+
+#### Linux
+
+```bash
+sudo apt update
+sudo apt install ffmpeg
+```
+
+#### macOS
+
+```bash
+brew install ffmpeg
+```
+
+### Verify Installation
+
+```bash
+ffmpeg -version
+```
+
+You should see FFmpeg version information.
+
+<Note>
+On Windows, if the command isn't recognized after installing with Chocolatey, restart your terminal or computer for the PATH changes to take effect.
+</Note>
+</Accordion>
+
+<Accordion title="FFmpeg Encoding Errors">
+### Problem
+
+Errors during audio encoding or playback stuttering.
+
+### Solutions
+
+1. **Update FFmpeg**: Ensure you have the latest version
+2. **Check system resources**: High CPU usage can cause encoding issues
+3. **Reinstall ffmpeg-static**:
+
+```bash
+npm uninstall ffmpeg-static
+npm install ffmpeg-static
+```
+
+4. **Use system FFmpeg**: Install FFmpeg manually (see above) and remove ffmpeg-static
+</Accordion>
+
+## Command Issues
+
+<Accordion title="Bot Not Responding to Commands">
+### Problem
+
+Bot doesn't respond when you send commands.
+
+### Checklist
+
+1. **Verify prefix**: Make sure you're using the correct prefix: `r!`
+
+```bash
+# Correct
+r!play song name
+
+# Incorrect
+!play song name
+/play song name
+```
+
+2. **Check bot status**: Ensure the bot is online (green/idle status)
+
+3. **Verify permissions**: Bot needs "Read Messages" and "Send Messages" permissions
+
+4. **Check token**: Verify your `.env` file has the correct Discord token
+
+```env
+TOKEN=your_actual_token_here
+```
+
+5. **Console logs**: Check the bot's console for error messages
+
+6. **Test with r!help**: Try the help command to see if the bot responds at all
+</Accordion>
+
+<Accordion title="Command Works But No Response">
+### Problem
+
+Command executes but bot doesn't send a message.
+
+### Solutions
+
+1. **Check embed permissions**: Bot needs "Embed Links" permission
+2. **Verify channel permissions**: Ensure bot can send messages in that specific channel
+3. **Check message filters**: Some servers have automated moderation bots that might delete bot messages
+</Accordion>
+
+## Permission Issues
+
+<Accordion title="Insufficient Permissions Error">
+### Problem
+
+Error: "Permisos insuficientes" or "Missing Permissions"
+
+### Common Scenarios
+
+#### Can't Join Voice Channel
+
+**Required permissions**:
+- Connect
+- Speak
+- Use Voice Activity
+
+**Fix**:
+1. Right-click the voice channel
+2. Edit Channel → Permissions
+3. Add bot's role with Connect and Speak permissions
+
+#### Can't Send Messages
+
+**Required permissions**:
+- Send Messages
+- Embed Links
+
+**Fix**:
+1. Check channel permissions
+2. Ensure bot's role has "Send Messages" and "Embed Links"
+
+#### Can't See Commands
+
+**Required permission**:
+- Read Messages/View Channels
+
+**Fix**:
+1. Enable "View Channel" for bot's role in channel settings
+</Accordion>
+
+<Accordion title="Permission Denied in Voice Channel">
+### Problem
+
+Bot can't connect to specific voice channels.
+
+### Solutions
+
+1. **Check voice channel permissions**:
+   - Right-click voice channel → Edit Channel
+   - Go to Permissions tab
+   - Ensure bot role has "Connect" enabled
+
+2. **Check user limit**: If the channel is full, the bot can't join
+
+3. **Region restrictions**: Some voice channels may have region locks
+
+4. **Role hierarchy**: Ensure bot's role isn't restricted by higher roles
+</Accordion>
+
+## Voice Connection Problems
+
+<Accordion title="Bot Joins But No Audio">
+### Problem
+
+Bot successfully joins voice channel but no audio plays.
+
+### Solutions
+
+1. **Check Speak permission**: Verify bot has "Speak" permission
+
+2. **Verify FFmpeg**: Ensure FFmpeg is properly installed
+
+```bash
+ffmpeg -version
+```
+
+3. **Check Discord voice settings**:
+   - User Settings → Voice & Video
+   - Ensure correct output device is selected
+   - Check if Discord is muted
+
+4. **Restart voice connection**:
+
+```bash
+r!stop
+# Rejoin voice channel and try again
+r!play song name
+```
+
+5. **Check voice dependencies**: Look at console logs for voice dependency report
+</Accordion>
+
+<Accordion title="Bot Disconnects Randomly">
+### Problem
+
+Bot disconnects from voice channel unexpectedly.
+
+### Possible Causes
+
+1. **Network instability**: Poor internet connection
+2. **Discord API issues**: Temporary Discord outages
+3. **Server region**: Voice server latency
+4. **Memory issues**: Bot running out of memory
+
+### Solutions
+
+1. **Check network**: Ensure stable internet connection
+2. **Monitor resources**: Check CPU and memory usage
+3. **Update dependencies**:
+
+```bash
+npm update
+```
+
+4. **Increase event listeners** (already configured in the bot):
+
+```javascript
+require('events').EventEmitter.defaultMaxListeners = 15;
+```
+</Accordion>
+
+<Accordion title="Voice Connection Timeout">
+### Problem
+
+Error: "VOICE_CONNECT_FAILED" or connection timeout.
+
+### Solutions
+
+1. **Check Discord status**: Visit [Discord Status](https://discordstatus.com/)
+2. **Verify network**: Ensure ports aren't blocked by firewall
+3. **Update @discordjs/voice**:
+
+```bash
+npm update @discordjs/voice
+```
+
+4. **Check voice dependencies**: The bot logs dependency report on startup
+5. **Reinstall voice dependencies**:
+
+```bash
+npm install --save @discordjs/voice
+```
+</Accordion>
+
+## API and Rate Limiting
+
+<Accordion title="YouTube API Rate Limit">
+### Problem
+
+Excessive API calls causing rate limit errors.
+
+### Solutions
+
+1. **Use URLs when possible**: Direct YouTube URLs don't require search API calls
+
+```bash
+# Preferred for frequent use
+r!play https://youtube.com/watch?v=VIDEO_ID
+
+# Uses API quota
+r!play song name
+```
+
+2. **Verify API key**: Ensure your YouTube API key is valid
+
+3. **Check quota**: Visit [Google Cloud Console](https://console.cloud.google.com/) to check your API quota
+
+4. **Request quota increase**: If needed, request higher quota limits from Google
+</Accordion>
+
+<Accordion title="Spotify API Issues">
+### Problem
+
+Spotify links not working or authentication errors.
+
+### Solutions
+
+1. **Verify credentials**: Check `.env` file has correct Spotify Client ID and Secret
+
+```env
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+```
+
+2. **Test credentials**: Verify they work on [Spotify Dashboard](https://developer.spotify.com/dashboard)
+
+3. **Check Spotify status**: Visit [Spotify Status](https://status.spotify.com/)
+
+4. **Reinstall plugin**:
+
+```bash
+npm uninstall @distube/spotify
+npm install @distube/spotify
+```
+</Accordion>
+
+<Accordion title="Discord API Rate Limiting">
+### Problem
+
+Bot being rate limited by Discord API.
+
+### Causes
+
+- Too many commands sent too quickly
+- Multiple bots on same token (don't do this)
+- Bot in too many servers with same infrastructure
+
+### Solutions
+
+1. **Implement cooldowns**: Add command cooldowns (if needed)
+2. **Avoid spam**: Don't send commands repeatedly
+3. **Check for loops**: Ensure bot isn't stuck in a command loop
+4. **Monitor console**: Look for rate limit warnings
+</Accordion>
+
+## Configuration Issues
+
+<Accordion title="Environment Variables Not Loading">
+### Problem
+
+`.env` file exists but variables aren't being read.
+
+### Solutions
+
+1. **Verify file location**: `.env` must be in the root directory
+
+```
+RosyMusicBot_estable/
+├── .env          ← Must be here
+├── index.js
+├── package.json
+└── ...
+```
+
+2. **Check file format**: No spaces around `=`
+
+```env
+# Correct
+TOKEN=abc123
+
+# Incorrect
+TOKEN = abc123
+```
+
+3. **No quotes needed**: Don't wrap values in quotes
+
+```env
+# Correct
+TOKEN=NzkyNzE1NDk0MDk2Njk0Mjgy
+
+# Incorrect  
+TOKEN="NzkyNzE1NDk0MDk2Njk0Mjgy"
+```
+
+4. **Restart bot**: Changes require bot restart
+</Accordion>
+
+<Accordion title="Bot Token Invalid">
+### Problem
+
+Error: "Invalid token" or bot won't login.
+
+### Solutions
+
+1. **Regenerate token**:
+   - Go to [Discord Developer Portal](https://discord.com/developers/applications)
+   - Select your application
+   - Bot section → Reset Token
+   - Copy new token to `.env`
+
+2. **Check for spaces**: Ensure no extra spaces in token
+
+3. **Verify token format**: Discord bot tokens are long alphanumeric strings
+
+<Warning>
+Never share your bot token. If exposed, regenerate it immediately.
+</Warning>
+</Accordion>
+
+## Search and Queue Issues
+
+<Accordion title="Search Returns No Results">
+### Problem
+
+Bot says "No se encontró la canción" for valid songs.
+
+### Solutions
+
+1. **Be more specific**: Include artist name
+
+```bash
+# Better
+r!play imagine dragons believer
+
+# Less specific
+r!play believer
+```
+
+2. **Use direct URL**: Most reliable method
+
+3. **Check play-dl**: The bot uses play-dl for searching; ensure it's installed
+
+```bash
+npm list play-dl
+```
+
+4. **Try different search terms**: Use alternative song titles
+</Accordion>
+
+<Accordion title="Selection Menu Times Out">
+### Problem
+
+Search results menu disappears before selection.
+
+### Explanation
+
+The bot gives you 20 seconds to select from search results.
+
+### Solutions
+
+1. **Select faster**: Menu timeout is 20 seconds
+2. **Use direct URLs**: Skip search entirely
+3. **Be ready**: Know which result you want before searching
+
+<Tip>
+If the menu times out, just run the search again. The bot will show the same results.
+</Tip>
+</Accordion>
+
+## Additional Help
+
+### Still Having Issues?
+
+1. **Check console logs**: Most errors are logged with details
+2. **Verify all prerequisites**: Node.js 18.17.0+, FFmpeg, valid API keys
+3. **Test in isolation**: Try the bot in a test server
+4. **Update dependencies**: Run `npm update` to get latest versions
+5. **Reinstall**: Delete `node_modules` and run `npm install` again
+
+### Getting Support
+
+When asking for help, provide:
+
+- Error message from console
+- Command that caused the error
+- Node.js version (`node --version`)
+- Operating system
+- What you've already tried
+
+## Related Resources
+
+- [Getting Started](/guides/getting-started) - Initial setup guide
+- [Best Practices](/guides/best-practices) - Optimize your configuration
+- [Commands Reference](/commands/overview) - Detailed command docs

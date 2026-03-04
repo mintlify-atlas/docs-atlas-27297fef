@@ -1,80 +1,295 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get Rosy Music Bot up and running in your Discord server
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Before installing Rosy Music Bot, ensure you have the following:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Node.js" icon="node-js">
+    Version 18.17.0 or higher
+  </Card>
+  
+  <Card title="Discord Bot Token" icon="discord">
+    Create a bot at [Discord Developer Portal](https://discord.com/developers/applications)
+  </Card>
+  
+  <Card title="YouTube API Key" icon="youtube">
+    Get one from [Google Cloud Console](https://console.cloud.google.com/)
+  </Card>
+  
+  <Card title="Spotify API Credentials" icon="spotify">
+    Client ID and Secret from [Spotify Dashboard](https://developer.spotify.com/dashboard)
+  </Card>
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  FFmpeg is included via the `ffmpeg-static` dependency, but you can install it manually if needed.
 </Note>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Rosy Music Bot repository to your local machine:
+    
+    ```bash
+    git clone [repository-url]
+    cd RosyMusicBot_estable
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    Install all required npm packages:
+    
+    ```bash
+    npm install
+    ```
+    
+    This will install:
+    - discord.js v14.25.1
+    - distube v5.2.3
+    - @distube/spotify v2.0.2
+    - @distube/yt-dlp v2.0.1
+    - play-dl v1.9.7
+    - And other required dependencies
+  </Step>
+  
+  <Step title="Configure Environment Variables">
+    Create a `.env` file in the root directory with your API credentials:
+    
+    ```bash .env
+    TOKEN=your_discord_bot_token
+    YOUTUBE_API_KEY=your_youtube_api_key
+    SPOTIFY_CLIENT_ID=your_spotify_client_id
+    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+    ```
+    
+    <Accordion title="How to get Discord Bot Token">
+      1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+      2. Create a new application or select an existing one
+      3. Navigate to the "Bot" section
+      4. Copy the token (click "Reset Token" if needed)
+      5. Enable "Message Content Intent" under Privileged Gateway Intents
+    </Accordion>
+    
+    <Accordion title="How to get YouTube API Key">
+      1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+      2. Create a new project or select an existing one
+      3. Enable the YouTube Data API v3
+      4. Create credentials (API Key)
+      5. Copy the API key
+    </Accordion>
+    
+    <Accordion title="How to get Spotify API Credentials">
+      1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+      2. Create a new application
+      3. Copy the Client ID
+      4. Click "Show Client Secret" and copy it
+    </Accordion>
+    
+    <Warning>
+      Never share your `.env` file or commit it to version control. Keep your tokens and API keys secure.
+    </Warning>
+  </Step>
+  
+  <Step title="Apply Critical Fix (Required)">
+    After installing dependencies, you need to fix a known issue with yt-dlp:
+    
+    <Warning>
+      This step is critical for the bot to work correctly. Without it, music playback will fail.
+    </Warning>
+    
+    Open `node_modules/@distube/yt-dlp/dist/index.js` and find lines containing `noCallHome: true` (approximately lines 147 and 177).
+    
+    Comment them out:
+    
+    ```javascript
+    // noCallHome: true,
+    ```
+    
+    This parameter causes playback errors and must be disabled.
+  </Step>
+  
+  <Step title="Start the Bot">
+    Run the bot using npm:
+    
+    ```bash
+    npm start
+    ```
+    
+    You should see output similar to:
+    
+    ```
+    [SUCCESS] ¡Bot conectado como RosyMusicBot#1234!
+    ```
+    
+    The bot will set its presence to "Listening to r!help 🎶"
+  </Step>
+  
+  <Step title="Invite Bot to Your Server">
+    Generate an invite link from the Discord Developer Portal:
+    
+    1. Go to your application in the Developer Portal
+    2. Navigate to OAuth2 > URL Generator
+    3. Select scopes: `bot`, `applications.commands`
+    4. Select bot permissions:
+       - Read Messages/View Channels
+       - Send Messages
+       - Embed Links
+       - Connect
+       - Speak
+    5. Copy the generated URL and open it to invite the bot
+  </Step>
+</Steps>
+
+## Your First Command
+
+Once the bot is running and invited to your server:
+
+<Steps>
+  <Step title="Join a Voice Channel">
+    Connect to any voice channel in your Discord server.
+  </Step>
+  
+  <Step title="Play a Song">
+    In any text channel, use the play command:
+    
+    ```
+    r!play the scientist
+    ```
+    
+    The bot will:
+    1. Search YouTube for "the scientist"
+    2. Show you up to 5 results in a dropdown menu
+    3. Wait for you to select a song (20 seconds)
+    4. Join your voice channel and start playing
+  </Step>
+  
+  <Step title="Try Other Commands">
+    Explore more commands:
+    
+    ```
+    r!help      # View all available commands
+    r!queue     # See the current queue
+    r!status    # Check bot status and permissions
+    r!volume 75 # Set volume to 75%
+    r!skip      # Skip to the next song
+    ```
+  </Step>
+</Steps>
+
+## Example Usage
+
+<CodeGroup>
+```bash Play by Search
+r!play coldplay the scientist
+# Bot searches YouTube and shows 5 results to choose from
+```
+
+```bash Play by URL
+r!play https://www.youtube.com/watch?v=RB-RcX5DS5A
+# Bot directly plays the video
+```
+
+```bash Play Spotify
+r!play https://open.spotify.com/track/5kdc2wuz8y0Czn7dmmh0qb
+# Bot converts Spotify track and plays it
+```
+
+```bash Queue Management
+r!play song 1
+r!play song 2
+r!play song 3
+r!queue
+# Shows all songs in queue with current song highlighted
+```
+</CodeGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Bot doesn't play music (NO_RESULT error)">
+    This is usually caused by the `noCallHome: true` parameter in yt-dlp.
+    
+    **Solution:**
+    1. Navigate to `node_modules/@distube/yt-dlp/dist/index.js`
+    2. Find lines with `noCallHome: true` (around lines 147 and 177)
+    3. Comment them out: `// noCallHome: true,`
+    4. Restart the bot with `npm start`
+  </Accordion>
+  
+  <Accordion title="FFmpeg errors">
+    If you encounter FFmpeg-related errors:
+    
+    **Verify FFmpeg installation:**
+    ```bash
+    ffmpeg -version
+    ```
+    
+    **Install manually if needed:**
+    
+    Windows (using Chocolatey):
+    ```powershell
+    choco install ffmpeg
+    ```
+    
+    Linux:
+    ```bash
+    sudo apt update
+    sudo apt install ffmpeg
+    ```
+    
+    macOS:
+    ```bash
+    brew install ffmpeg
+    ```
+  </Accordion>
+  
+  <Accordion title="Bot doesn't respond to commands">
+    - Verify the prefix is `r!` (configured in `config.js`)
+    - Check that "Message Content Intent" is enabled in Discord Developer Portal
+    - Ensure the bot has proper permissions in the server
+    - Verify the TOKEN in `.env` is correct
+  </Accordion>
+  
+  <Accordion title="Permission errors">
+    The bot needs these permissions:
+    - Read Messages/View Channels
+    - Send Messages
+    - Embed Links
+    - Connect (to voice channels)
+    - Speak (in voice channels)
+    
+    Check permissions with:
+    ```
+    r!status
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  The bot logs all activity to the console. Check the logs if you encounter issues.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Commands Reference" icon="terminal" href="/commands/overview">
+    Learn about all available commands and their usage
+  </Card>
+  
+  <Card title="Configuration" icon="gear" href="/setup/configuration">
+    Customize the bot prefix, presence, and other settings
+  </Card>
+  
+  <Card title="Architecture" icon="bolt" href="/development/architecture">
+    Understand how the bot is built and structured
+  </Card>
+  
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Detailed solutions for common issues
+  </Card>
+</CardGroup>

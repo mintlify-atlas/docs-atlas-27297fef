@@ -1,0 +1,324 @@
+---
+title: 'Discord Bot Setup'
+description: 'Create and configure your Discord bot application'
+icon: 'discord'
+---
+
+This guide walks you through creating a Discord bot application, generating your bot token, and inviting the bot to your server.
+
+## Creating a Discord Application
+
+<Steps>
+  <Step title="Access Discord Developer Portal">
+    Navigate to the [Discord Developer Portal](https://discord.com/developers/applications) and log in with your Discord account.
+  </Step>
+
+  <Step title="Create New Application">
+    1. Click the **"New Application"** button in the top right
+    2. Enter a name for your application (e.g., "Rosy Music Bot")
+    3. Read and accept the Discord Developer Terms of Service
+    4. Click **"Create"**
+
+    <Note>
+      The application name will be visible to users when they see your bot. Choose something descriptive and professional.
+    </Note>
+  </Step>
+
+  <Step title="Configure General Information (Optional)">
+    In the **General Information** tab, you can customize:
+    - **App Icon**: Upload a profile picture for your bot
+    - **Description**: Add a description of what your bot does
+    - **Tags**: Add relevant tags for discovery
+
+    These settings are optional but help identify your bot.
+  </Step>
+</Steps>
+
+## Creating the Bot User
+
+<Steps>
+  <Step title="Navigate to Bot Section">
+    In the left sidebar, click on the **"Bot"** tab.
+  </Step>
+
+  <Step title="Add Bot">
+    1. Click **"Add Bot"**
+    2. Confirm by clicking **"Yes, do it!"**
+    3. Your bot user is now created
+  </Step>
+
+  <Step title="Configure Bot Settings">
+    Customize your bot's settings:
+
+    **Public Bot:**
+    - Toggle OFF if you want only you to invite the bot
+    - Toggle ON to allow others to invite your bot
+
+    **Requires OAuth2 Code Grant:**
+    - Keep this OFF (not needed for music bots)
+
+    **Bot Permissions:**
+    - These will be set during the invite process
+  </Step>
+</Steps>
+
+## Generating and Securing Your Bot Token
+
+<Warning>
+  Your bot token is like a password. Never share it publicly or commit it to version control. Anyone with your token can control your bot.
+</Warning>
+
+<Steps>
+  <Step title="Reset and Copy Token">
+    In the **Bot** section:
+    1. Click **"Reset Token"** (or "Copy" if this is your first time)
+    2. Confirm the reset if prompted
+    3. Click **"Copy"** to copy your token to clipboard
+
+    <Note>
+      You can only view the token once after resetting. If you lose it, you'll need to reset it again.
+    </Note>
+  </Step>
+
+  <Step title="Save Token Securely">
+    Store your token temporarily in a secure location. You'll add it to your `.env` file in the [Configuration](/setup/configuration) step.
+
+    ```env
+    TOKEN=your_token_here
+    ```
+  </Step>
+</Steps>
+
+## Configuring Required Intents
+
+Intents allow your bot to receive specific events from Discord. Rosy Music Bot requires these intents:
+
+<Steps>
+  <Step title="Navigate to Bot Section">
+    Ensure you're in the **Bot** tab of your application.
+  </Step>
+
+  <Step title="Enable Privileged Gateway Intents">
+    Scroll down to **Privileged Gateway Intents** and enable:
+
+    **Message Content Intent:**
+    - ✅ Enable this intent
+    - Required for reading message content and commands
+
+    <Warning>
+      If your bot grows to 100+ servers, you'll need to verify your bot and justify these intents to Discord.
+    </Warning>
+  </Step>
+
+  <Step title="Verify Intent Configuration">
+    The bot uses these intents in code (from `index.js:11-16`):
+
+    ```javascript
+    const client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,              // Access guild information
+            GatewayIntentBits.GuildVoiceStates,    // Monitor voice channel state
+            GatewayIntentBits.GuildMessages,       // Receive messages in guilds
+            GatewayIntentBits.MessageContent       // Read message content
+        ]
+    });
+    ```
+
+    Ensure **Message Content Intent** is enabled in the Developer Portal to match this configuration.
+  </Step>
+</Steps>
+
+## Setting Bot Permissions
+
+Rosy Music Bot needs specific permissions to function properly:
+
+### Required Permissions
+
+<Accordion title="Voice Permissions">
+  - **Connect**: Join voice channels
+  - **Speak**: Play audio in voice channels
+  - **Use Voice Activity**: Transmit audio without push-to-talk
+</Accordion>
+
+<Accordion title="Text Permissions">
+  - **Send Messages**: Send responses to commands
+  - **Send Messages in Threads**: Respond in thread channels
+  - **Embed Links**: Display rich embeds for music info
+  - **Attach Files**: Send files if needed
+  - **Read Message History**: Read previous messages
+  - **Add Reactions**: React to messages for controls
+  - **Use External Emojis**: Use custom emojis in responses
+</Accordion>
+
+<Accordion title="General Permissions">
+  - **View Channels**: See channels to join and respond
+  - **Use Slash Commands**: Support for slash commands (future feature)
+</Accordion>
+
+## Inviting the Bot to Your Server
+
+<Steps>
+  <Step title="Navigate to OAuth2 Section">
+    In the left sidebar, click on **OAuth2** → **URL Generator**.
+  </Step>
+
+  <Step title="Select Scopes">
+    Under **Scopes**, select:
+    - ✅ `bot`
+    - ✅ `applications.commands` (for future slash command support)
+  </Step>
+
+  <Step title="Select Bot Permissions">
+    Under **Bot Permissions**, select the following:
+
+    **General Permissions:**
+    - View Channels
+
+    **Text Permissions:**
+    - Send Messages
+    - Send Messages in Threads
+    - Embed Links
+    - Attach Files
+    - Read Message History
+    - Add Reactions
+    - Use External Emojis
+
+    **Voice Permissions:**
+    - Connect
+    - Speak
+    - Use Voice Activity
+
+    The permission integer should be: **2150648832**
+  </Step>
+
+  <Step title="Generate Invite URL">
+    1. Copy the generated URL at the bottom of the page
+    2. Paste it into your browser
+    3. Select the server you want to add the bot to
+    4. Click **"Authorize"**
+    5. Complete the CAPTCHA if prompted
+
+    <Note>
+      You must have **Manage Server** permission to add bots to a server.
+    </Note>
+  </Step>
+
+  <Step title="Verify Bot Joined">
+    Check your Discord server:
+    - The bot should appear in the member list (offline until you start it)
+    - It will show as "Offline" until you run the bot
+  </Step>
+</Steps>
+
+## Testing Bot Connection
+
+After completing the configuration steps, you can test if your bot connects:
+
+1. Complete the [API Keys](/setup/api-keys) setup
+2. Complete the [Configuration](/setup/configuration) setup
+3. Start your bot:
+
+```bash
+npm start
+```
+
+4. Check the console output for:
+
+```
+✓ ¡Bot conectado como YourBotName#1234!
+```
+
+5. In Discord, the bot should now appear **Online** with status "idle" 🌙
+
+<Note>
+  The bot's presence is configured in `index.js:46-49` to display "r!help 🎶" and status "idle".
+</Note>
+
+## Troubleshooting
+
+<Accordion title="Bot Doesn't Come Online">
+  **Possible causes:**
+  1. Invalid bot token in `.env` file
+  2. Token has spaces or quotes around it
+  3. Intents not properly enabled
+  4. Network/firewall blocking connection
+
+  **Solutions:**
+  - Verify token is correct in `.env`
+  - Ensure Message Content Intent is enabled
+  - Check console for error messages
+  - Try resetting the token and updating `.env`
+</Accordion>
+
+<Accordion title="Bot Doesn't Respond to Commands">
+  **Possible causes:**
+  1. Message Content Intent not enabled
+  2. Bot doesn't have permission to read messages in channel
+  3. Wrong command prefix (should be `r!`)
+
+  **Solutions:**
+  - Enable Message Content Intent in Developer Portal
+  - Check bot has "View Channels" and "Send Messages" permissions
+  - Verify you're using `r!` prefix (configured in `config.js:2`)
+</Accordion>
+
+<Accordion title="Bot Can't Join Voice Channel">
+  **Possible causes:**
+  1. Missing voice permissions
+  2. Voice channel is full
+  3. Bot doesn't have Connect permission
+
+  **Solutions:**
+  - Verify bot has Connect and Speak permissions
+  - Check voice channel user limit
+  - Ensure bot role has voice permissions
+</Accordion>
+
+<Accordion title="Permission Integer Doesn't Match">
+  If the permission integer is different from 2150648832:
+  - This is fine as long as all required permissions are checked
+  - Different permission combinations create different integers
+  - What matters is that all necessary permissions are included
+</Accordion>
+
+## Security Best Practices
+
+<Warning>
+  Follow these security practices to keep your bot safe:
+</Warning>
+
+1. **Never share your bot token**
+   - Don't commit it to GitHub or public repositories
+   - Don't share it in Discord messages or screenshots
+   - Use environment variables (`.env` file)
+
+2. **Add .env to .gitignore**
+   ```gitignore
+   .env
+   .env.local
+   .env.*.local
+   ```
+
+3. **Reset token if compromised**
+   - If you accidentally expose your token, reset it immediately
+   - Update the token in your `.env` file
+   - Restart the bot
+
+4. **Use minimal permissions**
+   - Only request permissions the bot actually needs
+   - Don't request Administrator permission
+
+5. **Keep bot private during development**
+   - Toggle "Public Bot" OFF in Developer Portal
+   - Only make it public when ready for production
+
+## Next Steps
+
+With your Discord bot created and configured, proceed to:
+
+1. [API Keys](/setup/api-keys) - Get YouTube and Spotify API credentials
+2. [Configuration](/setup/configuration) - Configure bot settings and start the bot
+
+<Note>
+  Save your bot token securely. You'll need it in the next configuration step.
+</Note>

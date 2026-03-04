@@ -1,0 +1,582 @@
+---
+title: Best Practices
+description: Recommendations for optimal usage of Rosy Music Bot
+---
+
+## Overview
+
+This guide provides recommendations for getting the most out of Rosy Music Bot while maintaining security, performance, and reliability.
+
+## Bot Configuration
+
+### Environment Security
+
+<Warning>
+**Critical**: Never commit your `.env` file to version control. Always keep your tokens and API keys secret.
+</Warning>
+
+#### Securing Your Credentials
+
+1. **Add `.env` to `.gitignore`**:
+
+```bash
+# .gitignore
+.env
+node_modules/
+*.log
+```
+
+2. **Use environment-specific files**:
+
+```bash
+.env.development
+.env.production
+.env.example  # Template without actual credentials
+```
+
+3. **Rotate tokens regularly**: Change your Discord bot token periodically
+
+4. **Limit API key permissions**: Only grant necessary permissions to API keys
+
+<Tip>
+Create a `.env.example` file with placeholder values to help others set up the bot:
+
+```env
+TOKEN=your_discord_token_here
+YOUTUBE_API_KEY=your_youtube_api_key
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+```
+</Tip>
+
+### Optimal Dependencies Configuration
+
+#### Keep Dependencies Updated
+
+```bash
+# Check for outdated packages
+npm outdated
+
+# Update all dependencies
+npm update
+
+# Update specific package
+npm update discord.js
+```
+
+<Note>
+After updating dependencies, remember to reapply the yt-dlp fix mentioned in the [Troubleshooting guide](/guides/troubleshooting#playback-errors).
+</Note>
+
+#### Recommended Package Versions
+
+The bot works best with:
+
+- **Node.js**: 18.17.0 or higher (LTS version recommended)
+- **Discord.js**: 14.x
+- **Distube**: 5.x
+- **@discordjs/voice**: Latest version
+
+### Bot Presence Configuration
+
+The bot's presence is configured in `config.js`:
+
+```javascript
+module.exports = {
+    prefix: 'r!',
+    presence: {
+        activities: [
+            { name: 'r!help 🎶', type: 'LISTENING' },
+        ],
+        status: 'idle'
+    }
+};
+```
+
+<Tip>
+Use an informative presence message that shows your prefix and main command. This helps users discover how to use the bot.
+</Tip>
+
+## Managing Server Music Sessions
+
+### Queue Management Best Practices
+
+#### Starting a Session
+
+1. **Join voice channel first**: Always be in the voice channel before commanding the bot
+2. **Start with one song**: Test playback before queuing multiple songs
+3. **Use direct URLs for playlists**: More reliable than searching
+
+```bash
+# Good practice
+r!play https://youtube.com/watch?v=VIDEO_ID
+
+# Also good
+r!play the scientist coldplay
+```
+
+#### Managing Long Queues
+
+1. **Check queue regularly**: Use `r!queue` to see what's coming
+2. **Clear and restart**: Use `r!stop` to clear queue if it gets messy
+3. **One user manages**: Designate one person to manage the queue in shared sessions
+
+<Tip>
+The bot processes queue per-guild (server). Each server has its own independent queue, so the bot can serve multiple servers simultaneously.
+</Tip>
+
+### Session Lifecycle
+
+#### Best Practices for Starting
+
+```bash
+# 1. Join voice channel
+# 2. Test with one song
+r!play test song
+
+# 3. Verify playback works
+# 4. Add more songs to queue
+r!play song 2
+r!play song 3
+
+# 5. Check queue
+r!queue
+```
+
+#### Best Practices for Ending
+
+```bash
+# Proper cleanup
+r!stop  # Stops playback and clears queue
+
+# Bot will automatically leave voice channel
+```
+
+<Note>
+Always use `r!stop` to end sessions cleanly. This ensures the queue is cleared and resources are freed.
+</Note>
+
+## Queue Management Tips
+
+### Efficient Queue Building
+
+#### Use Direct URLs
+
+```bash
+# Most efficient - no search needed
+r!play https://youtu.be/VIDEO_ID
+```
+
+**Benefits**:
+- Faster processing
+- No YouTube API quota usage
+- Exact song you want
+- Works with playlists
+
+#### Search Optimization
+
+```bash
+# Specific searches get better results
+r!play imagine dragons believer official
+
+# Less specific - may get wrong song
+r!play believer
+```
+
+<Tip>
+When searching by name, include:
+- Artist name
+- "official" for official videos
+- Album name if needed
+</Tip>
+
+### Interactive Search Selection
+
+When the bot shows multiple results:
+
+1. **Be ready**: You have 20 seconds to select
+2. **Read carefully**: Check artist and duration before selecting
+3. **Act quickly**: Menu times out automatically
+
+### Volume Management
+
+```bash
+# Start at moderate volume
+r!volume 50
+
+# Adjust based on preference
+r!volume 30  # Quieter
+r!volume 80  # Louder
+```
+
+<Tip>
+**Recommended volume ranges**:
+- Background music: 20-40
+- Active listening: 50-70
+- Party mode: 70-90
+- Avoid 100: Can cause distortion
+</Tip>
+
+## Performance Optimization
+
+### Server Performance
+
+#### Resource Requirements
+
+**Minimum**:
+- 512MB RAM
+- 1 CPU core
+- Stable internet connection
+
+**Recommended**:
+- 1GB+ RAM
+- 2 CPU cores
+- Low-latency internet
+
+#### Monitoring Resources
+
+```bash
+# On Linux/Mac
+top
+htop
+
+# On Windows (PowerShell)
+Get-Process node
+```
+
+### Bot Performance
+
+#### Optimize for Multiple Guilds
+
+The bot handles multiple servers efficiently:
+
+- Each guild has independent queue
+- Concurrent playback supported
+- No cross-guild interference
+
+<Note>
+The bot uses DisTube with `emitNewSongOnly: true` to reduce event overhead and improve performance.
+</Note>
+
+#### Memory Management
+
+The bot is configured with increased event listeners:
+
+```javascript
+require('events').EventEmitter.defaultMaxListeners = 15;
+```
+
+This prevents memory warnings when handling multiple events.
+
+### Network Optimization
+
+#### Reduce API Calls
+
+1. **Use URLs**: Direct links don't use API quota
+2. **Cache results**: Reuse search results when possible
+3. **Batch operations**: Queue multiple songs at once
+
+```bash
+# Instead of one at a time
+r!play song1
+r!play song2
+r!play song3
+
+# Use URLs or add to queue quickly
+r!play https://youtube.com/playlist?list=PLAYLIST_ID
+```
+
+#### YouTube API Quota Management
+
+YouTube API has daily quotas:
+
+- **Default quota**: 10,000 units/day
+- **Search cost**: ~100 units per search
+- **Approximate searches**: ~100/day
+
+<Tip>
+**Quota-saving strategies**:
+- Prefer direct URLs
+- Use Spotify links (doesn't use YouTube quota for search)
+- Implement search caching (advanced)
+</Tip>
+
+## Security Considerations
+
+### Token Security
+
+<Warning>
+If your bot token is ever exposed publicly:
+1. Immediately go to Discord Developer Portal
+2. Navigate to your application → Bot
+3. Click "Regenerate Token"
+4. Update your `.env` file
+5. Restart the bot
+</Warning>
+
+#### What to Never Share
+
+- Discord bot token
+- YouTube API key
+- Spotify Client ID and Secret
+- `.env` file contents
+- Database credentials (if added)
+
+#### Safe Sharing Practices
+
+1. **Use `.env.example`**: Template file without credentials
+2. **Document setup**: Guide users to get their own keys
+3. **Never screenshot**: Don't share screenshots with tokens visible
+4. **Check commits**: Review before pushing to ensure no tokens
+
+### Permission Principle
+
+<Tip>
+**Least Privilege Principle**: Only grant permissions the bot actually needs.
+</Tip>
+
+Required permissions:
+- Read Messages/View Channels
+- Send Messages  
+- Embed Links
+- Connect (voice)
+- Speak (voice)
+
+Avoid granting:
+- Administrator
+- Manage Server
+- Manage Roles
+- Manage Channels
+
+### API Key Restrictions
+
+#### YouTube API Key
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project
+3. APIs & Services → Credentials
+4. Edit API key → Application restrictions:
+   - Set IP restrictions if hosting on static IP
+   - Set API restrictions to only YouTube Data API v3
+
+#### Spotify API
+
+1. Go to [Spotify Dashboard](https://developer.spotify.com/dashboard)
+2. Edit Settings:
+   - Add redirect URIs if needed
+   - Don't share Client Secret
+
+## Multi-Guild Best Practices
+
+### Scaling to Multiple Servers
+
+The bot automatically handles multiple guilds:
+
+```javascript
+// Each guild has independent DisTube queue
+// No special configuration needed
+```
+
+<Note>
+The bot can be in multiple servers simultaneously. Each server maintains:
+- Separate music queue
+- Independent volume settings
+- Own playback state
+</Note>
+
+### Guild-Specific Considerations
+
+#### Voice Regions
+
+- Bot performs best in servers with nearby voice regions
+- Higher latency in distant regions
+- Consider hosting bot closer to primary servers
+
+#### Concurrent Sessions
+
+The bot can play music in multiple servers at once:
+
+- No limit on concurrent guilds (within Discord API limits)
+- Each session independent
+- Resources scale with active sessions
+
+<Tip>
+**Resource scaling**: For every 10 concurrent voice sessions, allocate:
+- +500MB RAM
+- +10% CPU
+</Tip>
+
+### Load Balancing (Advanced)
+
+For very large deployments:
+
+1. **Shard the bot**: Discord.js supports sharding for 2500+ guilds
+2. **Multiple instances**: Run multiple bot instances with different tokens
+3. **Queue system**: Implement external queue management
+
+## Monitoring and Logging
+
+The bot includes a custom logger:
+
+```javascript
+const Logger = require('./utils/logger');
+
+Logger.info('Message');
+Logger.error('Error', error, 'filename.js');
+Logger.command('play', 'username', 'guild');
+Logger.music('Now playing: Song Name', 'play.js');
+```
+
+### Log Management
+
+1. **Monitor console**: Watch for errors in real-time
+2. **Log rotation**: Implement log rotation for production
+3. **Error tracking**: Log errors for debugging
+
+<Tip>
+For production deployments, consider using PM2 for process management and automatic log rotation:
+
+```bash
+npm install -g pm2
+pm2 start index.js --name rosy-bot
+pm2 logs rosy-bot
+```
+</Tip>
+
+## Deployment Best Practices
+
+### Development vs Production
+
+#### Development Setup
+
+```bash
+# Local development
+npm start
+
+# Auto-restart on changes (optional)
+npm install -g nodemon
+nodemon index.js
+```
+
+#### Production Setup
+
+```bash
+# Use process manager
+pm2 start index.js --name rosy-bot
+
+# Auto-restart on crash
+pm2 startup
+pm2 save
+```
+
+### Hosting Recommendations
+
+**Good hosting options**:
+- VPS (DigitalOcean, Linode, Vultr)
+- Cloud (AWS, Google Cloud, Azure)
+- Dedicated server
+
+**Not recommended**:
+- Heroku (dynos sleep, not ideal for voice)
+- Shared hosting (limited resources)
+- Replit (inconsistent for voice bots)
+
+<Tip>
+**Minimum VPS specs for production**:
+- 1GB RAM
+- 1 CPU core
+- 25GB SSD
+- Unmetered bandwidth
+</Tip>
+
+### Uptime Monitoring
+
+```bash
+# Use PM2 for automatic restarts
+pm2 start index.js --name rosy-bot --max-restarts 10
+
+# Monitor status
+pm2 status
+
+# View logs
+pm2 logs rosy-bot
+```
+
+## Backup and Recovery
+
+### What to Backup
+
+1. **Source code**: Keep in Git repository
+2. **Configuration**: `.env.example` template
+3. **Custom modifications**: Document all changes
+
+### What NOT to Backup
+
+- `node_modules/` (reinstall with `npm install`)
+- `.env` with actual credentials (security risk)
+- Log files (regenerate)
+
+<Tip>
+Use Git for version control:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin YOUR_REPO_URL
+git push -u origin main
+```
+
+Remember to add `.env` to `.gitignore` first!
+</Tip>
+
+## Maintenance Schedule
+
+### Weekly
+
+- Check bot status and uptime
+- Review error logs
+- Test critical commands
+
+### Monthly
+
+- Update dependencies: `npm update`
+- Review API quota usage
+- Check for Discord.js updates
+- Reapply yt-dlp fix if updated
+
+### Quarterly
+
+- Rotate bot token
+- Review and update API keys
+- Performance audit
+- Update Node.js version
+
+## Common Pitfalls to Avoid
+
+<Warning>
+**Don't**:
+- Commit `.env` file to Git
+- Share bot token publicly
+- Grant unnecessary permissions
+- Ignore error logs
+- Run multiple instances with same token
+- Forget to reapply yt-dlp fix after `npm install`
+</Warning>
+
+<Tip>
+**Do**:
+- Use direct URLs when possible
+- Monitor resource usage
+- Keep dependencies updated
+- Document custom changes
+- Test changes in development first
+- Regular backups of code
+</Tip>
+
+## Related Resources
+
+- [Getting Started](/guides/getting-started) - Initial setup
+- [Troubleshooting](/guides/troubleshooting) - Fix common issues
+- [Commands Reference](/commands/overview) - All commands
+- [Inviting Bot](/guides/inviting-bot) - Add to servers

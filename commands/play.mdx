@@ -1,0 +1,221 @@
+---
+title: 'Play Command'
+description: 'Play music from YouTube or search with interactive menu'
+icon: 'play'
+---
+
+## Overview
+
+The `r!play` command is the primary way to play music with Rosy. It supports YouTube URLs, search queries, and features an interactive search menu when multiple results are found.
+
+## Usage
+
+```bash
+r!play <song|url>
+```
+
+<ParamField path="song|url" type="string" required>
+  Song name to search or direct YouTube/Spotify URL
+</ParamField>
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="YouTube Support" icon="youtube">
+    Direct YouTube URLs and search integration
+  </Card>
+  <Card title="Interactive Search" icon="list">
+    Select from top 5 search results with dropdown menu
+  </Card>
+  <Card title="Automatic Queue" icon="layer-group">
+    Songs added to queue if music is already playing
+  </Card>
+  <Card title="Smart Search" icon="magnifying-glass">
+    Uses play-dl library for accurate YouTube search
+  </Card>
+</CardGroup>
+
+## Examples
+
+### Search by Song Name
+
+```bash
+r!play the scientist
+```
+
+When searching by name, if multiple results are found (>1), you'll see an interactive menu:
+
+<Frame>
+  <div style={{padding: '20px', background: '#2f3136', borderRadius: '8px'}}>
+    <p style={{color: '#5865f2', fontWeight: 'bold'}}>🎵 Elige una canción</p>
+    <p style={{color: '#dcddde'}}>Encontré 5 resultados para: <strong>the scientist</strong></p>
+    <p style={{color: '#b9bbbe', fontSize: '14px'}}>Dropdown menu with 5 options (20 second timeout)</p>
+  </div>
+</Frame>
+
+### Direct YouTube URL
+
+```bash
+r!play https://youtu.be/dQw4w9WgXcQ
+```
+
+Direct URLs bypass search and play immediately.
+
+### Add to Queue
+
+If music is already playing, new songs are automatically added to the queue:
+
+```bash
+r!play bohemian rhapsody
+# ✅ Canción agregada a la cola
+```
+
+## Interactive Search Menu
+
+When search returns multiple results, you get an interactive dropdown:
+
+- **Top 5 Results**: Shows up to 5 best matches
+- **Song Details**: Displays title, channel name, and duration
+- **20 Second Timeout**: Select within 20 seconds or menu expires
+- **User-Specific**: Only the command author can select from the menu
+
+### Menu Format
+
+Each option shows:
+```
+1. [Song Title] (truncated to 90 chars)
+Channel Name • Duration (MM:SS) or EN VIVO for live streams
+```
+
+## Implementation Details
+
+From `commands/music/play.js:48-122`:
+
+```javascript
+// Search with play-dl
+const searchResults = await playdl.search(query, { 
+    limit: 5,
+    source: { youtube: 'video' }
+});
+
+if (searchResults.length > 1) {
+    // Create interactive menu
+    const options = searchResults.slice(0, 5).map((song, index) => ({
+        label: `${index + 1}. ${song.title.substring(0, 90)}`,
+        description: `${song.channel?.name || 'Canal desconocido'} • ${song.durationInSec ? `${Math.floor(song.durationInSec / 60)}:${String(song.durationInSec % 60).padStart(2, '0')}` : 'EN VIVO'}`,
+        value: song.url
+    }));
+    
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('select_song')
+        .setPlaceholder('Elige una canción')
+        .addOptions(options);
+}
+```
+
+## Requirements
+
+<Check>You must be in a voice channel</Check>
+<Check>Bot needs `Connect` and `Speak` permissions</Check>
+
+## Voice Channel Validation
+
+From `commands/music/play.js:10-29`, the bot checks:
+
+```javascript
+const voiceChannel = message.member.voice.channel;
+
+if (!voiceChannel) {
+    return message.reply('No estás en un canal de voz');
+}
+
+const permissions = voiceChannel.permissionsFor(client.user);
+if (!permissions.has('Connect') || !permissions.has('Speak')) {
+    return message.reply('Permisos insuficientes');
+}
+```
+
+## Error Handling
+
+The command handles several error cases:
+
+### No Query Provided
+
+```bash
+r!play
+# Shows usage instructions and examples
+```
+
+### No Results Found
+
+```bash
+r!play asdfghjkl12345
+# ❌ No se encontró la canción
+# No encontré resultados para: asdfghjkl12345
+# 💡 Intenta con un nombre más específico
+```
+
+### Permission Errors
+
+```
+❌ Permisos insuficientes
+No tengo permisos para conectarme o hablar en ese canal de voz.
+```
+
+### Not in Voice Channel
+
+```
+❌ No estás en un canal de voz
+Debes unirte a un canal de voz primero para reproducir música.
+```
+
+## Search Behavior
+
+<Steps>
+  <Step title="Query Detection">
+    Checks if input is URL (http/https) or search query
+  </Step>
+  <Step title="Search Execution">
+    Uses play-dl to search YouTube with limit of 5 results
+  </Step>
+  <Step title="Result Handling">
+    - Single result: Plays immediately
+    - Multiple results: Shows interactive menu
+    - No results: Shows error with suggestions
+  </Step>
+  <Step title="Playback">
+    Passes selected URL to DisTube for playback
+  </Step>
+</Steps>
+
+## Integration with DisTube
+
+From `commands/music/play.js:104-108`, playback is handled by DisTube:
+
+```javascript
+await client.distube.play(voiceChannel, finalUrl, {
+    member: message.member,
+    textChannel: message.channel,
+    message: message
+});
+```
+
+DisTube automatically handles:
+- Creating audio player
+- Managing queue
+- Voice connection
+- Stream processing
+
+## Tips
+
+<Tip>
+For faster playback, use direct YouTube URLs instead of search queries
+</Tip>
+
+<Tip>
+Be specific with search terms to get better results
+</Tip>
+
+<Warning>
+The search menu times out after 20 seconds - select quickly!
+</Warning>

@@ -1,0 +1,276 @@
+---
+title: 'Installation Guide'
+description: 'Complete guide to installing Rosy Music Bot with all dependencies'
+icon: 'download'
+---
+
+This guide will walk you through installing Rosy Music Bot and all required dependencies on your system.
+
+## System Requirements
+
+Before installing Rosy Music Bot, ensure your system meets these requirements:
+
+- **Node.js**: Version 18.17.0 or higher
+- **npm**: Usually comes bundled with Node.js
+- **Git**: For cloning the repository
+- **FFmpeg**: Optional but recommended for audio processing
+- **Operating System**: Windows, macOS, or Linux
+
+<Note>
+  The bot uses `ffmpeg-static` as a dependency, which includes FFmpeg automatically. Manual installation is only needed if you encounter audio processing issues.
+</Note>
+
+## Installing Node.js
+
+<Steps>
+  <Step title="Choose Your Platform">
+    Select the installation method for your operating system.
+  </Step>
+
+  <Step title="Windows Installation">
+    1. Visit the [official Node.js website](https://nodejs.org/)
+    2. Download the LTS (Long Term Support) version installer
+    3. Run the installer and follow the setup wizard
+    4. Keep all default settings unless you have specific requirements
+    5. Verify installation by opening Command Prompt and running:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+
+  <Step title="macOS Installation">
+    **Using Official Installer:**
+    1. Visit [nodejs.org](https://nodejs.org/)
+    2. Download the macOS installer
+    3. Run the `.pkg` file and follow instructions
+
+    **Using Homebrew (Recommended):**
+    ```bash
+    brew install node
+    ```
+
+    Verify installation:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+
+  <Step title="Linux Installation">
+    **Ubuntu/Debian:**
+    ```bash
+    # Update package index
+    sudo apt update
+
+    # Install Node.js and npm
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt install -y nodejs
+    ```
+
+    **Fedora:**
+    ```bash
+    sudo dnf install nodejs
+    ```
+
+    **Arch Linux:**
+    ```bash
+    sudo pacman -S nodejs npm
+    ```
+
+    Verify installation:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+</Steps>
+
+## Installing FFmpeg (Optional)
+
+FFmpeg is included via `ffmpeg-static` package, but manual installation can resolve certain audio issues.
+
+<Accordion title="Windows - Using Chocolatey">
+  1. Install [Chocolatey](https://chocolatey.org/install) if you don't have it
+  2. Open PowerShell as Administrator
+  3. Run the following command:
+  ```powershell
+  choco install ffmpeg
+  ```
+  4. Restart your terminal to apply PATH changes
+  5. Verify installation:
+  ```powershell
+  ffmpeg -version
+  ```
+</Accordion>
+
+<Accordion title="macOS - Using Homebrew">
+  ```bash
+  brew install ffmpeg
+  ```
+
+  Verify installation:
+  ```bash
+  ffmpeg -version
+  ```
+</Accordion>
+
+<Accordion title="Linux - Using Package Manager">
+  **Ubuntu/Debian:**
+  ```bash
+  sudo apt update
+  sudo apt install ffmpeg
+  ```
+
+  **Fedora:**
+  ```bash
+  sudo dnf install ffmpeg
+  ```
+
+  **Arch Linux:**
+  ```bash
+  sudo pacman -S ffmpeg
+  ```
+
+  Verify installation:
+  ```bash
+  ffmpeg -version
+  ```
+</Accordion>
+
+## Cloning the Repository
+
+<Steps>
+  <Step title="Open Terminal">
+    Open your terminal, command prompt, or PowerShell.
+  </Step>
+
+  <Step title="Navigate to Directory">
+    Navigate to where you want to install the bot:
+    ```bash
+    cd /path/to/your/projects
+    ```
+  </Step>
+
+  <Step title="Clone Repository">
+    Clone the Rosy Music Bot repository:
+    ```bash
+    git clone [repository-url]
+    cd RosyMusicBot_estable
+    ```
+    
+    <Note>
+      Replace `[repository-url]` with the actual repository URL provided to you.
+    </Note>
+  </Step>
+</Steps>
+
+## Installing Dependencies
+
+Once you've cloned the repository, install all required Node.js packages:
+
+```bash
+npm install
+```
+
+This will install all dependencies listed in `package.json`, including:
+
+- `discord.js` (v14.25.1) - Discord API wrapper
+- `distube` (v5.2.3) - Music system handler
+- `@distube/spotify` (v2.0.2) - Spotify integration
+- `@distube/yt-dlp` (v2.0.1) - YouTube downloader
+- `@discordjs/voice` (v0.19.0) - Voice connection handler
+- `ffmpeg-static` (v5.3.0) - FFmpeg binary
+- `dotenv` (v17.2.3) - Environment variable loader
+- And other supporting packages
+
+<Warning>
+  After installation completes, you'll need to apply a critical fix to the yt-dlp plugin. See the troubleshooting section below.
+</Warning>
+
+## Troubleshooting Common Issues
+
+<Accordion title="Critical: yt-dlp Configuration Fix">
+  After running `npm install`, you must fix a configuration issue in the yt-dlp plugin:
+
+  **Location:** `node_modules/@distube/yt-dlp/dist/index.js`
+
+  **Find these lines** (approximately lines 147 and 177) and comment them out:
+
+  ```javascript
+  // Before (causes playback errors):
+  noCallHome: true,
+
+  // After (fixed):
+  //noCallHome: true,
+  ```
+
+  This parameter causes `NO_RESULT` and playback errors. After making this change, restart the bot.
+
+  <Warning>
+    You'll need to repeat this fix every time you run `npm install` or update dependencies.
+  </Warning>
+</Accordion>
+
+<Accordion title="FFmpeg Not Found Error">
+  If you see FFmpeg-related errors:
+
+  1. Verify FFmpeg installation:
+  ```bash
+  ffmpeg -version
+  ```
+
+  2. If command not found, install FFmpeg manually (see FFmpeg section above)
+
+  3. On Windows, restart your terminal or computer after installation
+
+  4. Ensure FFmpeg is in your system PATH
+</Accordion>
+
+<Accordion title="Node.js Version Error">
+  If you see errors about Node.js version:
+
+  1. Check your current version:
+  ```bash
+  node --version
+  ```
+
+  2. Ensure it's 18.17.0 or higher
+
+  3. If it's lower, update Node.js using the installation methods above
+</Accordion>
+
+<Accordion title="Permission Errors on Linux/macOS">
+  If you encounter permission errors during `npm install`:
+
+  **Don't use sudo with npm.** Instead, configure npm to use a different directory:
+
+  ```bash
+  mkdir ~/.npm-global
+  npm config set prefix '~/.npm-global'
+  echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+
+  Then run `npm install` again without sudo.
+</Accordion>
+
+<Accordion title="Git Not Installed">
+  If `git` command is not found:
+
+  - **Windows**: Download from [git-scm.com](https://git-scm.com/)
+  - **macOS**: `brew install git` or install Xcode Command Line Tools
+  - **Linux**: `sudo apt install git` (Ubuntu/Debian) or `sudo dnf install git` (Fedora)
+</Accordion>
+
+## Next Steps
+
+Now that you've installed the bot and its dependencies, proceed to:
+
+1. [Discord Bot Setup](/setup/discord-bot-setup) - Create your Discord application and bot
+2. [API Keys](/setup/api-keys) - Get YouTube and Spotify API credentials
+3. [Configuration](/setup/configuration) - Configure your bot settings
+
+<Note>
+  Keep your installation directory in a safe location. You'll need to access it for configuration and running the bot.
+</Note>

@@ -1,0 +1,100 @@
+---
+title: Introduction
+description: A powerful and easy-to-use Discord music bot built with Discord.js and DisTube
+---
+
+## What is Rosy Music Bot?
+
+Rosy Music Bot is a feature-rich Discord music bot that brings high-quality audio streaming directly to your Discord server. Built with modern technologies and designed for reliability, it provides seamless music playback from multiple sources with an intuitive command interface.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Multi-Platform Playback" icon="music">
+    Stream music from YouTube and Spotify with support for URLs and search queries
+  </Card>
+  
+  <Card title="Queue Management" icon="list">
+    Full queue system with ability to view, skip, and manage upcoming songs
+  </Card>
+  
+  <Card title="Volume Control" icon="volume-high">
+    Adjust playback volume from 1-100% with interactive controls
+  </Card>
+  
+  <Card title="Interactive Search" icon="magnifying-glass">
+    Search by song name and choose from up to 5 results using dropdown menus
+  </Card>
+  
+  <Card title="Real-time Status" icon="signal">
+    Live playback progress updates with interactive pause, resume, and skip buttons
+  </Card>
+  
+  <Card title="Rich Embeds" icon="window">
+    Beautiful embeds showing now playing info, thumbnails, and queue details
+  </Card>
+</CardGroup>
+
+## Why Use Rosy Music Bot?
+
+<AccordionGroup>
+  <Accordion title="Easy to Setup">
+    Simple configuration with just a few environment variables. Install dependencies, configure your `.env` file, and you're ready to go.
+  </Accordion>
+  
+  <Accordion title="Powerful Search">
+    Uses play-dl for intelligent YouTube search with up to 5 results displayed in an interactive dropdown menu. Users can select exactly which song they want.
+  </Accordion>
+  
+  <Accordion title="Interactive Controls">
+    Music control buttons (play, pause, skip, stop) and volume controls are built directly into the now playing embed for quick access.
+  </Accordion>
+  
+  <Accordion title="Multi-Source Support">
+    Supports both YouTube and Spotify playback through DisTube plugins, giving users flexibility in how they add music.
+  </Accordion>
+</AccordionGroup>
+
+## Tech Stack
+
+Rosy Music Bot is built with modern, reliable technologies:
+
+- **Discord.js v14.25.1** - Discord bot framework with full API support
+- **DisTube v5.2.3** - Advanced music system with queue management
+- **@distube/spotify v2.0.2** - Spotify integration plugin
+- **@distube/yt-dlp v2.0.1** - YouTube download plugin
+- **play-dl v1.9.7** - Search and stream from YouTube
+- **@discordjs/voice v0.19.0** - High-quality voice connections
+- **ffmpeg-static v5.3.0** - Audio processing
+
+<Note>
+  The bot uses the `r!` prefix for all commands (e.g., `r!play`, `r!skip`, `r!queue`).
+</Note>
+
+## Architecture Overview
+
+The bot follows a modular architecture:
+
+```
+rosy-music-bot/
+├── commands/music/     # Command handlers (play, pause, skip, etc.)
+├── events/
+│   ├── client/        # Discord client events
+│   └── distube/       # DisTube music events
+├── handlers/          # Command and event loaders
+├── utils/             # Embeds, controls, logger
+├── config.js          # Bot configuration
+└── index.js           # Main entry point
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get Rosy Music Bot up and running in minutes
+  </Card>
+  
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    Learn about all available music commands
+  </Card>
+</CardGroup>

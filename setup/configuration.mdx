@@ -1,0 +1,616 @@
+---
+title: 'Bot Configuration'
+description: 'Configure Rosy Music Bot settings and customize behavior'
+icon: 'gear'
+---
+
+This guide covers all configuration options for Rosy Music Bot, including environment variables, bot settings, and DisTube customization.
+
+## Environment Variables
+
+Rosy Music Bot uses environment variables to store sensitive credentials. These are loaded from the `.env` file using the `dotenv` package.
+
+### Creating Your .env File
+
+<Steps>
+  <Step title="Copy Template">
+    The repository includes `.env.example` as a template:
+
+    ```bash
+    cp .env.example .env
+    ```
+  </Step>
+
+  <Step title="Fill in Credentials">
+    Open `.env` in a text editor and add your credentials:
+
+    ```env
+    TOKEN=your_discord_bot_token
+    YOUTUBE_API_KEY=your_youtube_api_key
+    SPOTIFY_CLIENT_ID=your_spotify_client_id
+    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+    ```
+  </Step>
+
+  <Step title="Verify Format">
+    Ensure your `.env` file follows these rules:
+    - No spaces around the `=` sign
+    - No quotes around values
+    - No empty lines between variables
+    - File is named exactly `.env` (not `.env.txt`)
+  </Step>
+</Steps>
+
+<Warning>
+  Never commit your `.env` file to version control. Always keep it in `.gitignore`.
+</Warning>
+
+### Environment Variable Reference
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|----------|
+| `TOKEN` | Yes | Discord bot token | `MTA1M...` |
+| `YOUTUBE_API_KEY` | Yes | YouTube Data API v3 key | `AIzaSyC...` |
+| `SPOTIFY_CLIENT_ID` | Yes | Spotify application client ID | `a1b2c3d4...` |
+| `SPOTIFY_CLIENT_SECRET` | Yes | Spotify application secret | `x9y8z7w6...` |
+
+<Note>
+  All four environment variables are required for the bot to function properly. Missing any will cause startup errors.
+</Note>
+
+## Bot Configuration (config.js)
+
+The `config.js` file contains bot behavior settings. This file is located in the root directory.
+
+### Current Configuration
+
+```javascript config.js
+module.exports = {
+    prefix: 'r!',
+    presence: {
+        activities: [
+            { name: 'r!help ', type: 'LISTENING' }, 
+            { name: 'r!help para comandos', type: 'WATCHING' }
+        ],
+        status: 'idle' 
+    }
+};
+```
+
+### Configuration Options
+
+<Accordion title="Command Prefix">
+  **Current value:** `r!`
+
+  The prefix is the character(s) that must start every command.
+
+  ```javascript
+  prefix: 'r!',
+  ```
+
+  **Customizing the prefix:**
+  ```javascript
+  // Single character
+  prefix: '!',
+
+  // Multiple characters
+  prefix: 'music.',
+
+  // Special characters
+  prefix: '>',
+  ```
+
+  <Note>
+    After changing the prefix, restart the bot for changes to take effect.
+  </Note>
+</Accordion>
+
+<Accordion title="Bot Presence/Status">
+  **Current configuration:**
+  ```javascript
+  presence: {
+      activities: [
+          { name: 'r!help ', type: 'LISTENING' }, 
+          { name: 'r!help para comandos', type: 'WATCHING' }
+      ],
+      status: 'idle'
+  }
+  ```
+
+  **Activity Types:**
+  - `LISTENING` - "Listening to r!help"
+  - `WATCHING` - "Watching r!help para comandos"
+  - `PLAYING` - "Playing [name]"
+  - `STREAMING` - "Streaming [name]"
+  - `COMPETING` - "Competing in [name]"
+
+  **Status Values:**
+  - `online` - Green circle 🟢
+  - `idle` - Orange/yellow moon 🌙
+  - `dnd` - Red circle (Do Not Disturb) 🔴
+  - `invisible` - Appears offline
+
+  **Example customizations:**
+  ```javascript
+  // Single activity
+  presence: {
+      activities: [{ name: 'music 🎵', type: 'PLAYING' }],
+      status: 'online'
+  }
+
+  // Multiple activities (not rotated automatically)
+  presence: {
+      activities: [
+          { name: 'Spotify 🎧', type: 'LISTENING' },
+          { name: 'YouTube Music', type: 'WATCHING' }
+      ],
+      status: 'idle'
+  }
+  ```
+
+  <Note>
+    The actual presence set in code (`index.js:46-49`) overrides the config presence. To use config presence, modify the `setPresence` call in `index.js`.
+  </Note>
+</Accordion>
+
+### Modifying config.js
+
+<Steps>
+  <Step title="Open config.js">
+    Open the file in your text editor:
+
+    ```bash
+    nano config.js
+    # or
+    code config.js
+    ```
+  </Step>
+
+  <Step title="Make Changes">
+    Modify the values as needed:
+
+    ```javascript
+    module.exports = {
+        prefix: '!',  // Changed from 'r!'
+        presence: {
+            activities: [{ name: 'music', type: 'PLAYING' }],
+            status: 'online'
+        }
+    };
+    ```
+  </Step>
+
+  <Step title="Save and Restart">
+    1. Save the file
+    2. Stop the bot (Ctrl+C)
+    3. Restart: `npm start`
+  </Step>
+</Steps>
+
+## DisTube Configuration
+
+DisTube is the music system that powers Rosy Music Bot. It's configured in `index.js:24-36`.
+
+### Current DisTube Setup
+
+```javascript index.js
+client.distube = new DisTube(client, {
+    emitNewSongOnly: true,
+    emitAddSongWhenCreatingQueue: false,
+    plugins: [
+        new SpotifyPlugin({
+            api: {
+                clientId: process.env.SPOTIFY_CLIENT_ID,
+                clientSecret: process.env.SPOTIFY_CLIENT_SECRET
+            }
+        }),
+        new YtDlpPlugin({ update: true })
+    ]
+});
+```
+
+### DisTube Configuration Options
+
+<Accordion title="emitNewSongOnly">
+  **Current value:** `true`
+
+  When `true`, the `playSong` event only fires when a new song starts, not when resuming.
+
+  ```javascript
+  emitNewSongOnly: true,   // Only emit on new songs
+  emitNewSongOnly: false,  // Emit on resume too
+  ```
+
+  <Note>
+    Recommended to keep as `true` to avoid duplicate "Now Playing" messages.
+  </Note>
+</Accordion>
+
+<Accordion title="emitAddSongWhenCreatingQueue">
+  **Current value:** `false`
+
+  When `false`, prevents emitting `addSong` event when the first song creates a new queue.
+
+  ```javascript
+  emitAddSongWhenCreatingQueue: false,  // Don't emit addSong for first song
+  emitAddSongWhenCreatingQueue: true,   // Emit addSong for all songs
+  ```
+
+  <Note>
+    Keep as `false` to prevent redundant "Added to queue" messages for the first song.
+  </Note>
+</Accordion>
+
+<Accordion title="Additional Options (Optional)">
+  You can add more DisTube options:
+
+  ```javascript
+  client.distube = new DisTube(client, {
+      emitNewSongOnly: true,
+      emitAddSongWhenCreatingQueue: false,
+      
+      // Optional: Custom options
+      leaveOnEmpty: true,           // Leave when voice channel is empty
+      leaveOnFinish: false,         // Leave when queue finishes
+      leaveOnStop: false,           // Leave when stopped manually
+      savePreviousSongs: true,      // Save song history
+      searchSongs: 5,               // Number of search results
+      nsfw: false,                  // Allow NSFW content
+      emptyCooldown: 60,            // Seconds to wait before leaving empty channel
+      
+      plugins: [
+          new SpotifyPlugin({ /* ... */ }),
+          new YtDlpPlugin({ update: true })
+      ]
+  });
+  ```
+
+  <Warning>
+    Adding these options requires testing. Some may conflict with existing event handlers.
+  </Warning>
+</Accordion>
+
+### Plugin Configuration
+
+<Accordion title="Spotify Plugin">
+  **Current configuration:**
+  ```javascript
+  new SpotifyPlugin({
+      api: {
+          clientId: process.env.SPOTIFY_CLIENT_ID,
+          clientSecret: process.env.SPOTIFY_CLIENT_SECRET
+      }
+  })
+  ```
+
+  This plugin enables Spotify URL and playlist support.
+
+  **Additional options:**
+  ```javascript
+  new SpotifyPlugin({
+      api: {
+          clientId: process.env.SPOTIFY_CLIENT_ID,
+          clientSecret: process.env.SPOTIFY_CLIENT_SECRET
+      },
+      emitEventsAfterFetching: true  // Wait to fetch all tracks before emitting
+  })
+  ```
+</Accordion>
+
+<Accordion title="YtDlp Plugin">
+  **Current configuration:**
+  ```javascript
+  new YtDlpPlugin({ update: true })
+  ```
+
+  This plugin uses yt-dlp for YouTube downloads with automatic updates.
+
+  <Warning>
+    Remember to apply the critical fix after npm install: Comment out `noCallHome: true` in `node_modules/@distube/yt-dlp/dist/index.js` (lines ~147 and ~177).
+  </Warning>
+
+  **Additional options:**
+  ```javascript
+  new YtDlpPlugin({ 
+      update: true,           // Auto-update yt-dlp binary
+      updateTime: 1000 * 60   // Update check interval (ms)
+  })
+  ```
+</Accordion>
+
+## Client Configuration
+
+The Discord client is configured with specific intents in `index.js:10-17`.
+
+### Required Intents
+
+```javascript index.js
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,              // Access guild information
+        GatewayIntentBits.GuildVoiceStates,    // Monitor voice channel state
+        GatewayIntentBits.GuildMessages,       // Receive messages in guilds
+        GatewayIntentBits.MessageContent       // Read message content
+    ]
+});
+```
+
+<Warning>
+  Do not remove any of these intents. All four are required for the bot to function:
+  - `Guilds` - Basic guild access
+  - `GuildVoiceStates` - Join and monitor voice channels
+  - `GuildMessages` - Receive command messages
+  - `MessageContent` - Read message text (requires privileged intent)
+</Warning>
+
+### Optional Intents
+
+You can add additional intents if needed:
+
+```javascript
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        
+        // Optional intents:
+        GatewayIntentBits.GuildMembers,        // Access member info
+        GatewayIntentBits.MessageReactions,    // Receive reaction events
+        GatewayIntentBits.DirectMessages       // Receive DMs
+    ]
+});
+```
+
+<Note>
+  Some intents like `GuildMembers` and `MessageContent` are privileged and must be enabled in the Discord Developer Portal.
+</Note>
+
+## Starting the Bot
+
+Once configuration is complete, start the bot:
+
+<Steps>
+  <Step title="Verify Configuration">
+    Check that:
+    - `.env` file exists with all four credentials
+    - `config.js` has your desired settings
+    - Bot is invited to your Discord server
+  </Step>
+
+  <Step title="Start Bot">
+    Run the start command:
+
+    ```bash
+    npm start
+    ```
+
+    This executes `node index.js` as defined in `package.json:6`.
+  </Step>
+
+  <Step title="Verify Connection">
+    Look for success messages in the console:
+
+    ```
+    Voice Dependency Report:
+    [dependency information]
+    ✓ ¡Bot conectado como YourBotName#1234!
+    ```
+  </Step>
+
+  <Step title="Check Discord">
+    In Discord, verify:
+    - Bot shows as online with "idle" status 🌙
+    - Bot's custom status shows "r!help 🎶"
+  </Step>
+
+  <Step title="Test Commands">
+    Test basic functionality:
+
+    ```
+    r!help
+    r!play never gonna give you up
+    ```
+
+    If commands work, configuration is successful!
+  </Step>
+</Steps>
+
+## Advanced Configuration
+
+<Accordion title="Custom Event Handlers">
+  Event handlers are located in `handlers/events` directory and loaded in `index.js:44`:
+
+  ```javascript
+  require('./handlers/events')(client);
+  ```
+
+  To customize events:
+  1. Navigate to `handlers/events/`
+  2. Modify existing event files
+  3. Restart the bot
+</Accordion>
+
+<Accordion title="Custom Commands">
+  Commands are located in `commands/` directory and loaded in `index.js:43`:
+
+  ```javascript
+  require('./handlers/commands')(client);
+  ```
+
+  To add or modify commands:
+  1. Navigate to `commands/` directory
+  2. Create/edit command files
+  3. Restart the bot
+
+  <Note>
+    Command structure details are covered in the Commands documentation.
+  </Note>
+</Accordion>
+
+<Accordion title="Custom Logger Configuration">
+  The bot uses a custom logger (`utils/logger`). It's imported in `index.js:7`:
+
+  ```javascript
+  const Logger = require('./utils/logger');
+  ```
+
+  Logger usage examples from the code:
+  ```javascript
+  Logger.info('Information message');
+  Logger.success('Success message', 'file.js');
+  Logger.command('commandName', 'User#1234', 'Server Name');
+  Logger.error('Error message', error, 'file.js');
+  ```
+</Accordion>
+
+<Accordion title="Event Listener Limits">
+  The bot increases the default event listener limit in `index.js:8`:
+
+  ```javascript
+  require('events').EventEmitter.defaultMaxListeners = 15;
+  ```
+
+  This prevents "MaxListenersExceededWarning" errors with multiple audio streams.
+
+  **If you see listener warnings:**
+  ```javascript
+  // Increase the limit
+  require('events').EventEmitter.defaultMaxListeners = 20;
+  ```
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Bot Won't Start">
+  **Common causes:**
+  1. Missing or invalid environment variables
+  2. Syntax errors in config.js
+  3. Node.js version too old
+
+  **Solutions:**
+  - Check `.env` file exists and has all four variables
+  - Verify no syntax errors in `config.js`
+  - Run `node --version` (must be 18.17.0+)
+  - Check console for specific error messages
+</Accordion>
+
+<Accordion title="Commands Don't Work">
+  **Common causes:**
+  1. Wrong prefix in config.js
+  2. Message Content intent not enabled
+  3. Bot missing permissions
+
+  **Solutions:**
+  - Verify prefix in `config.js` matches what you're typing
+  - Enable Message Content intent in Developer Portal
+  - Check bot has "Send Messages" permission
+  - Review console logs for command execution errors
+</Accordion>
+
+<Accordion title="Music Playback Fails">
+  **Common causes:**
+  1. yt-dlp plugin not fixed
+  2. Invalid API credentials
+  3. FFmpeg issues
+
+  **Solutions:**
+  - Apply the critical yt-dlp fix (comment out `noCallHome: true`)
+  - Verify YouTube and Spotify credentials in `.env`
+  - Test FFmpeg: `ffmpeg -version`
+  - Check console for specific playback errors
+</Accordion>
+
+<Accordion title="Environment Variables Not Loading">
+  **Common causes:**
+  1. `.env` file in wrong location
+  2. File named incorrectly
+  3. Syntax errors in `.env`
+
+  **Solutions:**
+  - Ensure `.env` is in root directory (same level as `index.js`)
+  - Check file is named exactly `.env` (not `.env.txt`)
+  - Verify no spaces around `=` signs
+  - Ensure no quotes around values
+  - Restart bot completely after changes
+</Accordion>
+
+## Production Considerations
+
+<Warning>
+  Before running in production:
+</Warning>
+
+<Accordion title="Process Management">
+  Use a process manager like PM2 to keep the bot running:
+
+  ```bash
+  # Install PM2
+  npm install -g pm2
+
+  # Start bot with PM2
+  pm2 start index.js --name rosy-bot
+
+  # View logs
+  pm2 logs rosy-bot
+
+  # Auto-restart on system boot
+  pm2 startup
+  pm2 save
+  ```
+</Accordion>
+
+<Accordion title="Environment-Specific Configs">
+  Use different configs for development and production:
+
+  ```javascript
+  // config.js
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+
+  module.exports = {
+      prefix: isDevelopment ? 'dev!' : 'r!',
+      presence: {
+          activities: [{ 
+              name: isDevelopment ? 'Development Mode' : 'r!help', 
+              type: 'PLAYING' 
+          }],
+          status: isDevelopment ? 'dnd' : 'idle'
+      }
+  };
+  ```
+
+  Then run with:
+  ```bash
+  NODE_ENV=production npm start
+  ```
+</Accordion>
+
+<Accordion title="Error Handling">
+  Add global error handlers in `index.js`:
+
+  ```javascript
+  // Unhandled promise rejections
+  process.on('unhandledRejection', (error) => {
+      Logger.error('Unhandled promise rejection:', error, 'index.js');
+  });
+
+  // Uncaught exceptions
+  process.on('uncaughtException', (error) => {
+      Logger.error('Uncaught exception:', error, 'index.js');
+      process.exit(1);
+  });
+  ```
+</Accordion>
+
+## Next Steps
+
+With configuration complete, your bot is ready to use! Explore:
+
+- **Commands Documentation** - Learn all available commands
+- **Features Guide** - Discover bot capabilities
+- **Customization** - Modify the bot for your needs
+
+<Note>
+  Remember to restart the bot (Ctrl+C then `npm start`) after any configuration changes.
+</Note>

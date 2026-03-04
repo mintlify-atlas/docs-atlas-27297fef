@@ -1,0 +1,178 @@
+---
+title: 'Pause & Resume'
+description: 'Control playback with pause and resume commands'
+icon: 'pause'
+---
+
+## Overview
+
+Control music playback with pause and resume commands. These commands allow you to temporarily halt playback and continue from where you left off.
+
+## Pause Command
+
+Pauses the currently playing music.
+
+### Usage
+
+```bash
+r!pause
+```
+
+### Behavior
+
+<Steps>
+  <Step title="Check Queue">
+    Verifies music is currently playing
+  </Step>
+  <Step title="Check Pause State">
+    Confirms music isn't already paused
+  </Step>
+  <Step title="Pause Playback">
+    Halts the audio stream
+  </Step>
+</Steps>
+
+### Examples
+
+```bash
+# Pause currently playing music
+r!pause
+# ⏸️ ¡Música pausada!
+```
+
+### Implementation
+
+From `commands/music/pause.js:4-14`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+    if (!queue) return message.reply('❌ ¡No hay nada reproduciéndose!');
+    
+    if (queue.paused) {
+        return message.reply('⚠️ ¡La música ya está pausada! Usa !resume para reanudar.');
+    }
+
+    queue.pause();
+    message.reply('⏸️ ¡Música pausada!');
+}
+```
+
+## Resume Command
+
+Resumes playback after pausing.
+
+### Usage
+
+```bash
+r!resume
+```
+
+### Behavior
+
+<Steps>
+  <Step title="Check Queue">
+    Verifies a queue exists
+  </Step>
+  <Step title="Check Pause State">
+    Confirms music is paused
+  </Step>
+  <Step title="Resume Playback">
+    Continues audio from pause point
+  </Step>
+</Steps>
+
+### Examples
+
+```bash
+# Resume paused music
+r!resume
+# ▶️ ¡Música reanudada!
+```
+
+### Implementation
+
+From `commands/music/resume.js:4-16`:
+
+```javascript
+async execute(message, args, client) {
+    const queue = client.distube.getQueue(message);
+    if (!queue) return message.reply('❌ ¡No hay nada reproduciéndose!');
+
+    if (queue.paused) {
+        queue.resume();
+        return message.reply('▶️ ¡Música reanudada!');
+    }
+    
+    queue.pause();
+    message.reply('⏸️ ¡Música pausada!');
+}
+```
+
+<Note>
+The resume command also acts as a toggle - it can pause if music is playing. However, the dedicated `r!pause` command is clearer for this purpose.
+</Note>
+
+## Requirements
+
+<Check>Music must be currently playing</Check>
+<Check>An active queue must exist</Check>
+
+## Error Messages
+
+### No Music Playing
+
+```bash
+r!pause
+# ❌ ¡No hay nada reproduciéndose!
+```
+
+### Already Paused
+
+```bash
+r!pause
+# ⚠️ ¡La música ya está pausada! Usa !resume para reanudar.
+```
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Take a Break" icon="mug-hot">
+    Pause music during conversations or breaks
+  </Card>
+  <Card title="Answer Call" icon="phone">
+    Quickly pause when you need to take a call
+  </Card>
+  <Card title="Announcement" icon="bullhorn">
+    Pause for important announcements in voice
+  </Card>
+  <Card title="AFK Moment" icon="user-clock">
+    Pause when stepping away temporarily
+  </Card>
+</CardGroup>
+
+## State Management
+
+Both commands use DisTube's queue state management:
+
+- `queue.paused` - Boolean indicating if playback is paused
+- `queue.pause()` - Method to pause playback
+- `queue.resume()` - Method to resume playback
+
+The queue maintains playback position, so resuming continues from the exact point where you paused.
+
+## Related Commands
+
+- `r!stop` - Completely stop playback and clear queue (cannot resume)
+- `r!skip` - Move to next song instead of pausing
+- `r!play` - Start playing music
+
+## Tips
+
+<Tip>
+Use `r!pause` for temporary breaks - your spot in the song is saved
+</Tip>
+
+<Warning>
+If you use `r!stop` instead of pause, the queue is cleared and you cannot resume
+</Warning>

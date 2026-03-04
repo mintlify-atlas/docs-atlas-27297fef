@@ -1,0 +1,256 @@
+---
+title: Inviting the Bot
+description: Learn how to invite Rosy Music Bot to your Discord servers
+---
+
+## Overview
+
+This guide will walk you through the process of inviting Rosy Music Bot to your Discord server, including how to generate an invite link, understand required permissions, and troubleshoot common issues.
+
+## Generating an Invite Link
+
+### Step 1: Access Discord Developer Portal
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Log in with your Discord account
+3. Select your bot application from the list
+
+### Step 2: Navigate to OAuth2
+
+1. Click on "OAuth2" in the left sidebar
+2. Select "URL Generator" from the submenu
+
+### Step 3: Configure OAuth2 Scopes
+
+Select the following scopes:
+
+- **bot** - Required for bot functionality
+- **applications.commands** - (Optional) For future slash command support
+
+### Step 4: Select Bot Permissions
+
+Under "Bot Permissions", select the required permissions:
+
+<Accordion title="Text Permissions">
+- **Read Messages/View Channels** - Allows the bot to see channels and read messages
+- **Send Messages** - Required to respond to commands
+- **Embed Links** - Needed to display rich embeds with song information
+- **Read Message History** - For better command interaction handling
+</Accordion>
+
+<Accordion title="Voice Permissions">
+- **Connect** - Required to join voice channels
+- **Speak** - Required to play audio
+- **Use Voice Activity** - For proper voice playback
+</Accordion>
+
+<Note>
+The minimum required permissions integer is **36700160**. You can use this value directly when creating an invite URL.
+</Note>
+
+### Step 5: Copy the Invite URL
+
+At the bottom of the page, you'll see a generated URL:
+
+```
+https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=36700160&scope=bot
+```
+
+Copy this URL to invite the bot to servers.
+
+## Required Permissions Breakdown
+
+### Essential Permissions
+
+These permissions are **required** for the bot to function:
+
+| Permission | Why It's Needed |
+|------------|----------------|
+| Read Messages/View Channels | To see commands sent by users |
+| Send Messages | To respond to commands and send feedback |
+| Embed Links | To display song information, queue, and error messages |
+| Connect | To join voice channels where music will play |
+| Speak | To play audio in voice channels |
+
+### Recommended Permissions
+
+These permissions improve the user experience:
+
+| Permission | Benefit |
+|------------|--------|
+| Read Message History | Better handling of message-based interactions |
+| Add Reactions | For future interactive features |
+| Use External Emojis | Enhanced embed visuals (if implemented) |
+
+<Warning>
+Without **Connect** and **Speak** permissions, the bot cannot play music. If a voice channel doesn't grant these permissions, the bot will return an error.
+</Warning>
+
+## Adding to Your Server
+
+### As a Server Administrator
+
+1. Open the invite URL in your browser
+2. Select the server from the dropdown menu
+3. Review the requested permissions
+4. Click "Authorize"
+5. Complete the CAPTCHA verification
+
+<Tip>
+You must have "Manage Server" permissions to add bots to a Discord server.
+</Tip>
+
+### Verifying the Bot Joined
+
+After authorization:
+
+1. The bot should appear in your server's member list
+2. Check the bot's status (should show as online/idle)
+3. Test with a simple command: `r!help`
+
+## Adding to Multiple Servers
+
+### Using the Same Invite Link
+
+The same invite URL can be used for multiple servers:
+
+1. Share the invite link with other server administrators
+2. Each admin can add the bot to their respective servers
+3. The bot will function independently in each server
+
+<Note>
+Each server (guild) maintains its own music queue and settings. Playing music in one server doesn't affect other servers.
+</Note>
+
+### Managing Multiple Guilds
+
+The bot automatically handles multiple servers:
+
+- Each server has its own queue
+- Volume settings are per-server
+- Commands in one server don't affect others
+- The bot can play music in multiple servers simultaneously
+
+## Permission Troubleshooting
+
+### Bot Can't See Commands
+
+<Accordion title="Solution">
+**Issue**: Bot doesn't respond to commands
+
+**Cause**: Missing "Read Messages/View Channels" permission
+
+**Fix**:
+1. Right-click the channel where you're sending commands
+2. Select "Edit Channel" → "Permissions"
+3. Add the bot's role
+4. Enable "Read Messages/View Channels"
+5. Save changes
+</Accordion>
+
+### Bot Can't Send Messages
+
+<Accordion title="Solution">
+**Issue**: Bot doesn't reply to commands
+
+**Cause**: Missing "Send Messages" permission
+
+**Fix**:
+1. Go to Channel Permissions
+2. Find the bot's role
+3. Enable "Send Messages"
+4. Ensure "Send Messages in Threads" is also enabled if using threads
+</Accordion>
+
+### Bot Can't Join Voice Channel
+
+<Accordion title="Solution">
+**Issue**: Error message "Permisos insuficientes" or "Insufficient permissions"
+
+**Cause**: Missing "Connect" or "Speak" permissions in voice channel
+
+**Fix**:
+1. Right-click the voice channel
+2. Select "Edit Channel" → "Permissions"
+3. Add the bot's role
+4. Enable both "Connect" and "Speak"
+5. Save and try again
+</Accordion>
+
+### Embeds Not Displaying
+
+<Accordion title="Solution">
+**Issue**: Messages appear as plain text instead of rich embeds
+
+**Cause**: Missing "Embed Links" permission
+
+**Fix**:
+1. Check channel permissions
+2. Enable "Embed Links" for the bot's role
+3. This permission is also needed in text channels, not just voice
+</Accordion>
+
+## Channel-Specific Permissions
+
+### Restricting Bot Access
+
+To limit which channels the bot can see:
+
+1. Go to Server Settings → Roles
+2. Find or create the bot's role
+3. Disable channel access in the role settings
+4. In specific channels, override permissions to allow the bot
+
+### Voice Channel Restrictions
+
+To control which voice channels the bot can join:
+
+1. Right-click the voice channel
+2. Edit Channel → Permissions
+3. For bot's role, set "Connect" to:
+   - ✅ Allow (bot can join)
+   - ❌ Deny (bot cannot join)
+
+<Tip>
+Use permission overrides to create music-only voice channels where the bot has access, while restricting it from other channels.
+</Tip>
+
+## Removing the Bot
+
+If you need to remove the bot from your server:
+
+1. Go to Server Settings → Members
+2. Find the bot in the member list
+3. Click the three dots next to the bot's name
+4. Select "Kick" or "Ban"
+
+<Note>
+Removing the bot doesn't revoke its access token. To fully deauthorize, go to User Settings → Authorized Apps and remove the bot there.
+</Note>
+
+## Best Practices
+
+<Tip>
+**Create a Bot Role**: Create a dedicated role for the bot with only necessary permissions. This makes permission management easier.
+</Tip>
+
+<Tip>
+**Test Before Sharing**: Test the bot in your server first before sharing the invite link with others.
+</Tip>
+
+<Tip>
+**Document Permissions**: Keep a list of required permissions for your team to reference when troubleshooting.
+</Tip>
+
+<Tip>
+**Regular Audits**: Periodically review bot permissions to ensure they haven't been accidentally changed.
+</Tip>
+
+## Next Steps
+
+Now that your bot is invited:
+
+- [Getting Started](/guides/getting-started) - Learn basic commands
+- [Troubleshooting](/guides/troubleshooting) - Fix common issues
+- [Best Practices](/guides/best-practices) - Optimize your setup
+- [Commands Reference](/commands/overview) - Explore all commands

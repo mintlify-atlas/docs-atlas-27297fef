@@ -1,97 +1,212 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Rosy Music Bot Documentation
+description: A powerful and easy-to-use Discord music bot with YouTube and Spotify support
+mode: custom
 ---
 
-## Setting up
+<div className="relative overflow-hidden dark:bg-[#0f1117] bg-white py-20">
+  <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#0f1117] dark:to-[#0f1117] bg-gradient-to-br from-gray-50 via-white to-gray-50 opacity-50"></div>
+  
+  <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
+      <div className="lg:col-span-7">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold dark:text-white text-gray-900 mb-6">
+          Bring music to your Discord server
+        </h1>
+        <p className="text-base sm:text-lg lg:text-xl dark:text-gray-400 text-gray-600 mb-8 max-w-2xl">
+          Rosy Music Bot is a powerful Discord bot built with Discord.js and DisTube, featuring YouTube and Spotify playback, queue management, and an intuitive command interface.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a 
+            href="/quickstart" 
+            className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-lg transition-colors bg-[#aebd57] text-gray-900 hover:bg-[#9dac46]"
+          >
+            Get started
+          </a>
+          <a 
+            href="/commands/overview" 
+            className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-lg transition-colors dark:border-white/30 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+          >
+            View commands
+          </a>
+        </div>
+      </div>
+      <div className="hidden lg:block lg:col-span-5">
+        <img 
+          src="https://media.brand.dev/39a42569-1b4f-424a-991c-ae977229b8de.jpg" 
+          alt="Rosy Music Bot" 
+          noZoom
+          className="w-full h-auto max-w-md mx-auto rounded-2xl shadow-2xl"
+        />
+      </div>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold dark:text-white text-gray-900 mb-4">
+    Quick start
+  </h2>
+  <p className="text-base dark:text-gray-400 text-gray-600 mb-8">
+    Get Rosy Music Bot running in your Discord server in minutes
+  </p>
+  
+  <Steps>
+    <Step title="Install dependencies">
+      Clone the repository and install the required packages:
+      
+      ```bash
+      git clone https://github.com/GatuzoCXL/Rosy-Music-Bot.git
+      cd Rosy-Music-Bot
+      npm install
+      ```
+    </Step>
+    
+    <Step title="Configure your bot">
+      Create a `.env` file with your Discord bot token and API keys:
+      
+      ```env
+      TOKEN=your_discord_bot_token
+      YOUTUBE_API_KEY=your_youtube_api_key
+      SPOTIFY_CLIENT_ID=your_spotify_client_id
+      SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+      ```
+      
+      <Info>Need help getting API keys? Check out our [API Keys guide](/setup/api-keys)</Info>
+    </Step>
+    
+    <Step title="Start the bot">
+      Launch your bot and invite it to your server:
+      
+      ```bash
+      npm start
+      ```
+      
+      Once running, use `r!help` in any text channel to see available commands.
+    </Step>
+  </Steps>
+</div>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold dark:text-white text-gray-900 mb-4">
+    Key features
+  </h2>
+  <p className="text-base dark:text-gray-400 text-gray-600 mb-8">
+    Everything you need for a premium music experience in Discord
+  </p>
+  
+  <CardGroup cols={2}>
+    <Card title="YouTube & Spotify" icon="music" href="/commands/play">
+      Play music from YouTube and Spotify with URL support and smart search
+    </Card>
+    <Card title="Interactive search" icon="magnifying-glass" href="/commands/play">
+      Search results with a selection menu for easy song picking
+    </Card>
+    <Card title="Queue management" icon="list" href="/commands/queue">
+      Full queue control with loop modes and position tracking
+    </Card>
+    <Card title="Volume control" icon="volume-high" href="/commands/volume">
+      Adjust playback volume from 1-100% on the fly
+    </Card>
+    <Card title="Playback controls" icon="circle-play" href="/commands/overview">
+      Play, pause, resume, skip, and stop with simple commands
+    </Card>
+    <Card title="Real-time status" icon="gauge" href="/commands/status">
+      Live progress tracking with rich embeds and song info
+    </Card>
+  </CardGroup>
+</div>
 
-## Make it yours
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold dark:text-white text-gray-900 mb-4">
+    Explore the docs
+  </h2>
+  <p className="text-base dark:text-gray-400 text-gray-600 mb-8">
+    Find everything you need to configure, use, and customize Rosy Music Bot
+  </p>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <a href="/setup/installation" className="group block rounded-2xl dark:border-[#27272a] border-gray-200 border dark:hover:border-[#aebd57] hover:border-[#aebd57] overflow-hidden no-underline transition-colors">
+      <div className="h-48 dark:bg-[#1a1d27] bg-gray-50 flex items-center justify-center overflow-hidden">
+        <div className="text-6xl">⚙️</div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-base font-semibold dark:text-white text-gray-900 mb-2">Setup & Configuration</h3>
+        <p className="text-sm dark:text-gray-400 text-gray-600 mb-3">Complete installation guide, Discord bot setup, and API configuration</p>
+        <div className="flex items-center text-sm font-medium dark:text-gray-400 text-gray-600 dark:group-hover:text-[#aebd57] group-hover:text-[#aebd57] transition-colors">
+          Learn more 
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/commands/overview" className="group block rounded-2xl dark:border-[#27272a] border-gray-200 border dark:hover:border-[#aebd57] hover:border-[#aebd57] overflow-hidden no-underline transition-colors">
+      <div className="h-48 dark:bg-[#1a1d27] bg-gray-50 flex items-center justify-center overflow-hidden">
+        <div className="text-6xl">🎵</div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-base font-semibold dark:text-white text-gray-900 mb-2">Command reference</h3>
+        <p className="text-sm dark:text-gray-400 text-gray-600 mb-3">Detailed documentation for all music commands and playback controls</p>
+        <div className="flex items-center text-sm font-medium dark:text-gray-400 text-gray-600 dark:group-hover:text-[#aebd57] group-hover:text-[#aebd57] transition-colors">
+          View commands 
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/guides/troubleshooting" className="group block rounded-2xl dark:border-[#27272a] border-gray-200 border dark:hover:border-[#aebd57] hover:border-[#aebd57] overflow-hidden no-underline transition-colors">
+      <div className="h-48 dark:bg-[#1a1d27] bg-gray-50 flex items-center justify-center overflow-hidden">
+        <div className="text-6xl">🔧</div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-base font-semibold dark:text-white text-gray-900 mb-2">Troubleshooting</h3>
+        <p className="text-sm dark:text-gray-400 text-gray-600 mb-3">Solutions for common issues including playback errors and FFmpeg setup</p>
+        <div className="flex items-center text-sm font-medium dark:text-gray-400 text-gray-600 dark:group-hover:text-[#aebd57] group-hover:text-[#aebd57] transition-colors">
+          Get help 
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/development/architecture" className="group block rounded-2xl dark:border-[#27272a] border-gray-200 border dark:hover:border-[#aebd57] hover:border-[#aebd57] overflow-hidden no-underline transition-colors">
+      <div className="h-48 dark:bg-[#1a1d27] bg-gray-50 flex items-center justify-center overflow-hidden">
+        <div className="text-6xl">👨‍💻</div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-base font-semibold dark:text-white text-gray-900 mb-2">Development</h3>
+        <p className="text-sm dark:text-gray-400 text-gray-600 mb-3">Architecture overview, project structure, and contribution guidelines</p>
+        <div className="flex items-center text-sm font-medium dark:text-gray-400 text-gray-600 dark:group-hover:text-[#aebd57] group-hover:text-[#aebd57] transition-colors">
+          Start contributing 
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="dark:bg-[#1a1d27] bg-gray-50 dark:border-[#27272a] border-gray-200 border rounded-2xl p-8 md:p-12">
+    <div className="text-center max-w-2xl mx-auto">
+      <h2 className="text-2xl sm:text-3xl font-semibold dark:text-white text-gray-900 mb-4">
+        Ready to add music to your server?
+      </h2>
+      <p className="text-base dark:text-gray-400 text-gray-600 mb-6">
+        Get started with Rosy Music Bot in minutes and bring high-quality music playback to your Discord community.
+      </p>
+      <a 
+        href="/quickstart" 
+        className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-lg transition-colors bg-[#aebd57] text-gray-900 hover:bg-[#9dac46]"
+      >
+        Get started now
+      </a>
+    </div>
+  </div>
+</div>

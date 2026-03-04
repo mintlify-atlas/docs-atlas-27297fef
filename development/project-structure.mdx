@@ -1,0 +1,547 @@
+---
+title: 'Project Structure'
+description: 'Complete guide to the codebase organization and file structure'
+icon: 'folder-tree'
+---
+
+## Directory Overview
+
+```
+rosy-music-bot/
+├── commands/
+│   └── music/              # Music command implementations
+│       ├── help.js
+│       ├── pause.js
+│       ├── play.js
+│       ├── queue.js
+│       ├── resume.js
+│       ├── skip.js
+│       ├── status.js
+│       ├── stop.js
+│       └── volume.js
+├── events/
+│   ├── client/             # Discord client events
+│   │   ├── interactionCreate.js
+│   │   └── messageCreate.js
+│   └── distube/            # DisTube music events
+│       ├── debug.js
+│       ├── error.js
+│       ├── playSong.js
+│       └── setup.js
+├── handlers/               # Dynamic loaders
+│   ├── commands.js
+│   └── events.js
+├── utils/                  # Utility modules
+│   ├── embeds.js
+│   ├── logger.js
+│   ├── musicControls.js
+│   └── progressUpdater.js
+├── index.js                # Bot entry point
+├── config.js               # Bot configuration
+├── .env                    # Environment variables
+├── .env.example            # Environment template
+└── package.json            # Dependencies
+```
+
+## Core Files
+
+### index.js
+
+The main entry point that bootstraps the bot:
+
+- Initializes Discord.js client with required intents
+- Sets up DisTube with Spotify and YtDlp plugins
+- Loads command and event handlers
+- Implements message command parsing
+- Sets bot presence and activity status
+
+```javascript index.js:40-50
+client.once('clientReady', async () => {
+    Logger.success(`¡Bot conectado como ${client.user.tag}!`, 'index.js');
+    
+    require('./handlers/commands')(client);
+    require('./handlers/events')(client);
+    
+    client.user.setPresence({
+        activities: [{ name: 'r!help 🎶', type: ActivityType.Listening }],
+        status: 'idle'
+    });
+});
+```
+
+### config.js
+
+Centralized configuration for bot settings:
+
+- Command prefix (`r!`)
+- Bot presence configuration
+- Activity types and status
+
+```javascript config.js:1-10
+module.exports = {
+    prefix: 'r!',
+    presence: {
+        activities: [
+            { name: 'r!help ', type: 'LISTENING' }, 
+            { name: 'r!help para comandos', type: 'WATCHING' }
+        ],
+        status: 'idle' 
+    }
+};
+```
+
+## Commands Directory
+
+### /commands/music/
+
+Contains all music-related command implementations. Each file exports a command module.
+
+#### Command Module Structure
+
+```javascript
+module.exports = {
+    name: 'commandname',           // Command trigger
+    description: 'Description',    // Help text
+    async execute(message, args, client) {
+        // Command implementation
+    }
+};
+```
+
+#### Available Commands
+
+<CardGroup cols={2}>
+  <Card title="play.js" icon="play">
+    Searches and plays songs from YouTube or Spotify URLs. Implements:
+    - Voice channel validation
+    - Permission checks
+    - YouTube search with play-dl
+    - Interactive song selection menu
+    - Queue management
+  </Card>
+  
+  <Card title="pause.js" icon="pause">
+    Pauses the current song playback.
+  </Card>
+  
+  <Card title="resume.js" icon="play">
+    Resumes paused playback.
+  </Card>
+  
+  <Card title="skip.js" icon="forward">
+    Skips to the next song in the queue.
+  </Card>
+  
+  <Card title="stop.js" icon="stop">
+    Stops playback and clears the queue.
+  </Card>
+  
+  <Card title="volume.js" icon="volume-high">
+    Adjusts playback volume (0-100%).
+  </Card>
+  
+  <Card title="queue.js" icon="list">
+    Displays the current song queue with durations.
+  </Card>
+  
+  <Card title="status.js" icon="circle-info">
+    Shows bot status and current playback information.
+  </Card>
+  
+  <Card title="help.js" icon="circle-question">
+    Lists all available commands with usage examples.
+  </Card>
+</CardGroup>
+
+#### Example: play.js Structure
+
+```javascript commands/music/play.js:6-9
+module.exports = {
+    name: 'play',
+    description: 'Reproduce una canción',
+    async execute(message, args, client) {
+```
+
+Key features:
+- Validates user is in voice channel
+- Checks bot permissions (Connect, Speak)
+- Searches YouTube using play-dl library
+- Displays interactive selection menu for multiple results
+- Handles URL and search query formats
+
+## Events Directory
+
+### /events/client/
+
+Handles Discord client events.
+
+#### interactionCreate.js
+
+Processes button interactions for music controls:
+
+```javascript events/client/interactionCreate.js:4-18
+module.exports = (client) => {
+    client.on('interactionCreate', async (interaction) => {
+        if (!interaction.isButton()) return;
+
+        const buttonIds = [
+            'music_pause', 'music_resume', 'music_skip', 'music_stop', 'music_loop',
+            'volume_up', 'volume_down', 'volume_mute'
+        ];
+
+        if (buttonIds.includes(interaction.customId)) {
+            Logger.music(`Botón presionado: ${interaction.customId} por ${interaction.user.tag}`, 'interactionCreate.js');
+            await handleMusicButton(interaction, client);
+        }
+    });
+};
+```
+
+Handles button IDs:
+- `music_pause`, `music_resume`, `music_skip`, `music_stop`, `music_loop`
+- `volume_up`, `volume_down`, `volume_mute`
+
+#### messageCreate.js
+
+Note: Message handling is primarily done in `index.js` (index.js:52-68). This event file is excluded from the handler to avoid duplication.
+
+### /events/distube/
+
+Handles DisTube music playback events.
+
+#### playSong.js
+
+Triggered when a new song starts playing:
+
+- Creates "Now Playing" embed with song info
+- Adds music control buttons
+- Starts real-time progress updater
+- Logs playback information
+
+#### error.js
+
+Handles DisTube errors and displays user-friendly error messages.
+
+#### debug.js
+
+Logs DisTube debug information for troubleshooting.
+
+#### setup.js
+
+Initial DisTube configuration:
+
+```javascript events/distube/setup.js:1-4
+module.exports = (client) => {
+    // Aumentar el límite de listeners
+    client.distube.setMaxListeners(25);
+```
+
+- Increases max listeners to prevent warnings
+- Handles voice connection state changes
+- Manages disconnect events
+- Implements auto-resume on connection issues
+
+## Handlers Directory
+
+### handlers/commands.js
+
+Dynamically loads all command files:
+
+```javascript handlers/commands.js:4-23
+module.exports = (client) => {
+    const commandsPath = path.join(__dirname, '../commands');
+    const commandFolders = fs.readdirSync(commandsPath);
+
+    for (const folder of commandFolders) {
+        const folderPath = path.join(commandsPath, folder);
+        const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+        
+        for (const file of commandFiles) {
+            const filePath = path.join(folderPath, file);
+            const command = require(filePath);
+            if (command.name) {
+                client.commands.set(command.name, command);
+                console.log(`Comando cargado: ${command.name}`);
+            }
+        }
+    }
+};
+```
+
+Process:
+1. Reads all folders in `/commands/`
+2. Finds all `.js` files in each folder
+3. Requires each command file
+4. Registers command in `client.commands` Collection
+
+### handlers/events.js
+
+Dynamically loads client and DisTube events:
+
+```javascript handlers/events.js:5-18
+module.exports = (client) => {
+    const clientEventsPath = path.join(__dirname, '../events/client');
+    if (fs.existsSync(clientEventsPath)) {
+        const clientEventFiles = fs.readdirSync(clientEventsPath)
+            .filter(file => file.endsWith('.js') && file !== 'messageCreate.js');
+        
+        for (const file of clientEventFiles) {
+            const filePath = path.join(clientEventsPath, file);
+            const event = require(filePath);
+            if (typeof event === 'function') {
+                event(client);
+                Logger.success(`Evento de cliente cargado: ${file}`, 'events.js');
+            }
+        }
+    }
+```
+
+Loads events from:
+- `/events/client/` (excludes messageCreate.js to avoid duplication)
+- `/events/distube/`
+
+Each event file exports a function that receives the client and registers event listeners.
+
+## Utils Directory
+
+### utils/embeds.js
+
+Factory functions for creating Discord embeds:
+
+**Exports:**
+- `createNowPlayingEmbed(song, queue)` - Current song with progress bar
+- `createAddedToQueueEmbed(song, position)` - Song added confirmation
+- `createQueueEmbed(queue)` - Full queue listing
+- `createErrorEmbed(title, description)` - Error messages
+- `createInfoEmbed(title, description)` - Information messages
+- `createProgressBar(current, total, length)` - Visual progress bar
+- `formatDuration(seconds)` - Time formatting (HH:MM:SS)
+
+**Color Scheme:**
+```javascript utils/embeds.js:3-10
+const COLORS = {
+    PLAYING: 0x00FF00,
+    PAUSED: 0xFFAA00,
+    ERROR: 0xFF0000,
+    INFO: 0x0099FF,
+    QUEUE: 0x9B59B6,
+    SUCCESS: 0x00FF88
+};
+```
+
+### utils/logger.js
+
+Structured logging system with multiple log levels:
+
+**Methods:**
+- `Logger.music(message, location)` - Music playback logs
+- `Logger.distube(message, location)` - DisTube engine logs
+- `Logger.voice(message, location)` - Voice connection logs
+- `Logger.error(message, error, location)` - Error logs with stack traces
+- `Logger.warn(message, location)` - Warning logs
+- `Logger.success(message, location)` - Success logs
+- `Logger.info(message, location)` - Info logs
+- `Logger.command(commandName, user, guild)` - Command execution logs
+
+```javascript utils/logger.js:7-10
+static music(message, location = '') {
+    const loc = location ? ` | ${location}` : '';
+    console.log(`[MUSIC] ${this.getTimestamp()}${loc} | ${message}`);
+}
+```
+
+### utils/musicControls.js
+
+Interactive button components and handlers:
+
+**Exports:**
+- `createMusicButtons()` - Returns ActionRow with pause, resume, skip, stop, loop buttons
+- `createVolumeButtons()` - Returns ActionRow with volume +/-, mute buttons
+- `handleMusicButton(interaction, client)` - Processes button interactions
+
+**Music Controls:**
+```javascript utils/musicControls.js:4-30
+function createMusicButtons() {
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('music_pause')
+                .setEmoji('⏸️')
+                .setStyle(ButtonStyle.Primary),
+            // ... more buttons
+        );
+    return row;
+}
+```
+
+**Button Handler Logic:**
+- Validates queue exists
+- Checks user is in voice channel
+- Verifies user is in same voice channel as bot
+- Executes appropriate queue action
+- Sends ephemeral confirmation message
+
+### utils/progressUpdater.js
+
+Real-time embed update system:
+
+**Exports:**
+- `startProgressUpdater(message, queue, song)` - Starts 10-second update interval
+- `stopProgressUpdater(queueId)` - Stops updater for specific queue
+- `stopAllUpdaters()` - Cleanup function for all active updaters
+
+```javascript utils/progressUpdater.js:7-33
+function startProgressUpdater(message, queue, song) {
+    if (activeUpdaters.has(queue.id)) {
+        stopProgressUpdater(queue.id);
+    }
+
+    const updateInterval = setInterval(async () => {
+        try {
+            if (!queue || queue.stopped) {
+                stopProgressUpdater(queue.id);
+                return;
+            }
+
+            const embed = createNowPlayingEmbed(song, queue);
+            const musicButtons = createMusicButtons();
+            const volumeButtons = createVolumeButtons();
+
+            await message.edit({
+                embeds: [embed],
+                components: [musicButtons, volumeButtons]
+            }).catch(() => {
+                stopProgressUpdater(queue.id);
+            });
+        } catch (error) {
+            Logger.error('Error actualizando progreso', error, 'progressUpdater.js');
+            stopProgressUpdater(queue.id);
+        }
+    }, 10000); // Update every 10 seconds
+```
+
+Maintains a Map of active updaters to prevent memory leaks and duplicate intervals.
+
+## File Naming Conventions
+
+<Accordion title="Command Files">
+  **Pattern:** `commandname.js` (lowercase, single word)
+  
+  Examples:
+  - `play.js` - Play command
+  - `skip.js` - Skip command
+  - `volume.js` - Volume command
+  
+  All command files must export an object with `name`, `description`, and `execute` properties.
+</Accordion>
+
+<Accordion title="Event Files">
+  **Pattern:** `eventName.js` (camelCase, matches Discord.js event name)
+  
+  Examples:
+  - `interactionCreate.js` - Maps to 'interactionCreate' event
+  - `playSong.js` - Maps to 'playSong' DisTube event
+  - `messageCreate.js` - Maps to 'messageCreate' event
+  
+  All event files must export a function that accepts the client parameter.
+</Accordion>
+
+<Accordion title="Utility Files">
+  **Pattern:** `moduleName.js` (camelCase, descriptive)
+  
+  Examples:
+  - `embeds.js` - Embed creation utilities
+  - `logger.js` - Logging system
+  - `musicControls.js` - Music control buttons and handlers
+  - `progressUpdater.js` - Progress update system
+  
+  Utility files export either classes, functions, or objects with multiple exports.
+</Accordion>
+
+<Accordion title="Handler Files">
+  **Pattern:** `type.js` (lowercase, singular)
+  
+  Examples:
+  - `commands.js` - Command loader
+  - `events.js` - Event loader
+  
+  Handler files export a single function that accepts the client and performs dynamic loading.
+</Accordion>
+
+## Adding New Files
+
+### Adding a New Command
+
+1. Create file in `/commands/music/yourcommand.js`
+2. Use the command template:
+
+```javascript
+const { createErrorEmbed, createInfoEmbed } = require('../../utils/embeds');
+const Logger = require('../../utils/logger');
+
+module.exports = {
+    name: 'yourcommand',
+    description: 'Your command description',
+    async execute(message, args, client) {
+        // Validate voice channel
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel) {
+            return message.reply({ 
+                embeds: [createErrorEmbed('Not in voice', 'Join a voice channel first')] 
+            });
+        }
+        
+        // Get queue
+        const queue = client.distube.getQueue(message.guildId);
+        if (!queue) {
+            return message.reply({ 
+                embeds: [createErrorEmbed('No queue', 'Nothing is playing')] 
+            });
+        }
+        
+        // Your command logic here
+        Logger.command('yourcommand', message.author.tag, message.guild.name);
+    }
+};
+```
+
+3. The command will be automatically loaded on bot restart
+
+### Adding a New Event
+
+1. Create file in `/events/client/` or `/events/distube/`
+2. Export a function that registers the event:
+
+```javascript
+const Logger = require('../../utils/logger');
+
+module.exports = (client) => {
+    client.on('eventName', async (param1, param2) => {
+        // Event handling logic
+        Logger.info('Event triggered', 'yourEvent.js');
+    });
+};
+```
+
+3. The event will be automatically registered on bot startup
+
+### Adding a New Utility
+
+1. Create file in `/utils/yourutil.js`
+2. Export functions or classes:
+
+```javascript
+function helperFunction() {
+    // Implementation
+}
+
+module.exports = {
+    helperFunction
+};
+```
+
+3. Import in files that need it:
+
+```javascript
+const { helperFunction } = require('../utils/yourutil');
+```

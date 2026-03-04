@@ -1,0 +1,340 @@
+---
+title: 'Status Command'
+description: 'View bot status, permissions, and system information'
+icon: 'info'
+---
+
+## Overview
+
+The `r!status` command displays comprehensive information about the bot's current state, including voice connection, permissions, queue status, and system metrics.
+
+## Usage
+
+```bash
+r!status
+```
+
+## Display Format
+
+The status command returns a detailed embed with multiple information sections:
+
+<Frame>
+  <div style={{padding: '20px', background: '#2f3136', borderRadius: '8px'}}>
+    <p style={{color: '#5865f2', fontWeight: 'bold', fontSize: '18px'}}>🤖 Estado del Bot Rosy</p>
+    <br />
+    <p style={{color: '#dcddde', fontWeight: 'bold'}}>📊 Información del Bot</p>
+    <p style={{color: '#b9bbbe'}}>Nombre: Rosy</p>
+    <p style={{color: '#b9bbbe'}}>ID: 123456789...</p>
+    <p style={{color: '#b9bbbe'}}>Status: En línea</p>
+    <br />
+    <p style={{color: '#dcddde', fontWeight: 'bold'}}>🎤 Micrófono/Voz</p>
+    <p style={{color: '#b9bbbe'}}>Estado: ✅ En canal de voz</p>
+    <p style={{color: '#b9bbbe'}}>Canal: Music</p>
+    <p style={{color: '#b9bbbe'}}>Permisos: Connect: ✅ | Speak: ✅</p>
+    <br />
+    <p style={{color: '#dcddde', fontWeight: 'bold'}}>🎵 Cola de Reproducción</p>
+    <p style={{color: '#b9bbbe'}}>✅ Activa (5 canciones)</p>
+  </div>
+</Frame>
+
+## Information Sections
+
+### Bot Information
+
+<ParamField path="Nombre" type="string">
+  Bot's display name
+</ParamField>
+
+<ParamField path="ID" type="string">
+  Bot's Discord user ID
+</ParamField>
+
+<ParamField path="Status" type="string">
+  Always shows "En línea" (online)
+</ParamField>
+
+### Voice Channel Status
+
+<ParamField path="Estado" type="string">
+  ✅ En canal de voz / ❌ No en canal de voz
+</ParamField>
+
+<ParamField path="Canal" type="string">
+  Name of voice channel or "N/A"
+</ParamField>
+
+<ParamField path="Permisos" type="string">
+  Connect and Speak permissions status
+</ParamField>
+
+### Queue Status
+
+<ParamField path="Cola de Reproducción" type="string">
+  ✅ Activa (X canciones) or ❌ Sin cola activa
+</ParamField>
+
+### Server Information
+
+<ParamField path="Nombre" type="string">
+  Discord server name
+</ParamField>
+
+<ParamField path="ID" type="string">
+  Server/guild ID
+</ParamField>
+
+<ParamField path="Miembros" type="number">
+  Total member count
+</ParamField>
+
+### System Metrics
+
+<ParamField path="Latencia" type="number">
+  WebSocket ping in milliseconds
+</ParamField>
+
+<ParamField path="Uptime" type="number">
+  Bot uptime in seconds
+</ParamField>
+
+## Implementation
+
+From `commands/music/status.js:4-64`:
+
+```javascript
+async execute(message, args, client) {
+    const voiceChannel = message.member.voice.channel;
+    const guild = message.guild;
+    
+    // Bot information
+    const botUser = client.user;
+    const botMember = guild.members.cache.get(botUser.id);
+    
+    // Voice connection info
+    let voiceStatus = voiceChannel ? '✅ En canal de voz' : '❌ No en canal de voz';
+    let voiceChannelName = voiceChannel?.name || 'N/A';
+    
+    if (voiceChannel) {
+        const perms = voiceChannel.permissionsFor(client.user);
+        const hasConnect = perms.has('Connect');
+        const hasSpeak = perms.has('Speak');
+        voicePerms = `Connect: ${hasConnect ? '✅' : '❌'} | Speak: ${hasSpeak ? '✅' : '❌'}`;
+    }
+
+    // DisTube queue info
+    const queue = client.distube.getQueue(guild);
+    const queueStatus = queue ? `✅ Activa (${queue.songs.length} canciones)` : '❌ Sin cola activa';
+    
+    message.reply({
+        embeds: [{
+            color: 0x0099FF,
+            title: '🤖 Estado del Bot Rosy',
+            thumbnail: { url: botUser.displayAvatarURL({ size: 256 }) },
+            fields: [
+                {
+                    name: '📊 Información del Bot',
+                    value: `**Nombre**: ${botUser.username}\n**ID**: ${botUser.id}\n**Status**: En línea`,
+                    inline: false
+                },
+                {
+                    name: '🎤 Micrófono/Voz',
+                    value: `**Estado**: ${voiceStatus}\n**Canal**: ${voiceChannelName}\n**Permisos**: ${voicePerms}`,
+                    inline: false
+                },
+                {
+                    name: '🎵 Cola de Reproducción',
+                    value: queueStatus,
+                    inline: false
+                },
+                {
+                    name: '⚙️ Servidor',
+                    value: `**Nombre**: ${guild.name}\n**ID**: ${guild.id}\n**Miembros**: ${guild.memberCount}`,
+                    inline: false
+                },
+                {
+                    name: '💻 Sistema',
+                    value: `**Latencia**: ${client.ws.ping}ms\n**Uptime**: ${Math.round(client.uptime / 1000)}s`,
+                    inline: false
+                }
+            ],
+            footer: { text: 'Usa r!help para ver todos los comandos' }
+        }]
+    });
+}
+```
+
+## Status Indicators
+
+### Voice Status
+
+<Check>✅ En canal de voz - Bot is connected</Check>
+<Warning>❌ No en canal de voz - Bot is not connected</Warning>
+
+### Permissions
+
+<Check>Connect: ✅ - Can join voice channel</Check>
+<Check>Speak: ✅ - Can play audio</Check>
+<Warning>Connect: ❌ - Missing join permission</Warning>
+<Warning>Speak: ❌ - Missing speak permission</Warning>
+
+### Queue Status
+
+<Check>✅ Activa (5 canciones) - Queue is active with song count</Check>
+<Warning>❌ Sin cola activa - No music in queue</Warning>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Troubleshoot Issues" icon="wrench">
+    Check permissions when music won't play
+  </Card>
+  <Card title="Verify Connection" icon="plug">
+    Confirm bot is in voice channel
+  </Card>
+  <Card title="Check Queue" icon="list">
+    Quick view of how many songs are queued
+  </Card>
+  <Card title="Monitor Performance" icon="chart-line">
+    View latency and uptime metrics
+  </Card>
+</CardGroup>
+
+## Example Outputs
+
+### Bot Connected and Playing
+
+```bash
+r!status
+
+🤖 Estado del Bot Rosy
+
+📊 Información del Bot
+Nombre: Rosy
+ID: 987654321012345678
+Status: En línea
+
+🎤 Micrófono/Voz
+Estado: ✅ En canal de voz
+Canal: Music
+Permisos: Connect: ✅ | Speak: ✅
+
+🎵 Cola de Reproducción
+✅ Activa (7 canciones)
+
+⚙️ Servidor
+Nombre: My Discord Server
+ID: 123456789012345678
+Miembros: 250
+
+💻 Sistema
+Latencia: 45ms
+Uptime: 3600s
+```
+
+### Bot Not Connected
+
+```bash
+r!status
+
+🤖 Estado del Bot Rosy
+
+📊 Información del Bot
+Nombre: Rosy
+ID: 987654321012345678
+Status: En línea
+
+🎤 Micrófono/Voz
+Estado: ❌ No en canal de voz
+Canal: N/A
+Permisos: N/A
+
+🎵 Cola de Reproducción
+❌ Sin cola activa
+
+⚙️ Servidor
+Nombre: My Discord Server
+ID: 123456789012345678
+Miembros: 250
+
+💻 Sistema
+Latencia: 42ms
+Uptime: 7200s
+```
+
+### Permission Issues
+
+```bash
+🎤 Micrófono/Voz
+Estado: ✅ En canal de voz
+Canal: Music
+Permisos: Connect: ✅ | Speak: ❌
+```
+
+## Troubleshooting with Status
+
+### Music Won't Play
+
+1. Run `r!status`
+2. Check "🎤 Micrófono/Voz" section
+3. Verify both Connect and Speak show ✅
+4. If ❌, grant permissions to bot role
+
+### High Latency
+
+1. Run `r!status`
+2. Check "💻 Sistema" → Latencia
+3. Over 100ms may cause audio issues
+4. Consider bot hosting location
+
+### Bot Not Responding
+
+1. Run `r!status`
+2. Check "📊 Información del Bot" → Status
+3. Verify "En línea"
+4. Check uptime for recent restarts
+
+## Data Sources
+
+The status command retrieves data from:
+
+<Steps>
+  <Step title="Discord.js Client">
+    Bot user info, guild data, member count
+  </Step>
+  <Step title="Voice Channel">
+    User's current voice channel and permissions
+  </Step>
+  <Step title="DisTube Queue">
+    Active queue and song count
+  </Step>
+  <Step title="WebSocket">
+    Latency and connection metrics
+  </Step>
+  <Step title="Process">
+    Bot uptime from Node.js process
+  </Step>
+</Steps>
+
+## Related Commands
+
+- `r!help` - View all available commands
+- `r!queue` - Detailed queue view
+- `r!play` - Start playing music
+
+## Tips
+
+<Tip>
+Use `r!status` first when troubleshooting any music playback issues
+</Tip>
+
+<Tip>
+If permissions show ❌, contact server admin to grant bot the required permissions
+</Tip>
+
+<Info>
+Latency under 50ms is excellent, 50-100ms is good, over 100ms may cause issues
+</Info>
+
+<Warning>
+If bot is not in voice channel but queue is active, something is wrong with the connection
+</Warning>

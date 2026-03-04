@@ -1,0 +1,357 @@
+---
+title: 'System Architecture'
+description: 'Understanding the architecture and design of Rosy Music Bot'
+icon: 'sitemap'
+---
+
+## Overview
+
+Rosy Music Bot is built on a modular architecture using Discord.js and DisTube for music playback. The system follows an event-driven design pattern with clear separation between command handling, event processing, and utility functions.
+
+## Core Architecture
+
+### Bot Client Setup
+
+The Discord client is initialized in `index.js` with required gateway intents:
+
+```javascript index.js:10-17
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
+});
+```
+
+**Required intents:**
+- `Guilds` - Access to guild information
+- `GuildVoiceStates` - Monitor voice channel connections
+- `GuildMessages` - Receive message events
+- `MessageContent` - Read message content for prefix commands
+
+### DisTube Integration
+
+DisTube handles all music playback functionality with plugin support:
+
+```javascript index.js:24-36
+client.distube = new DisTube(client, {
+    emitNewSongOnly: true,
+    emitAddSongWhenCreatingQueue: false,
+    plugins: [
+        new SpotifyPlugin({
+            api: {
+                clientId: process.env.SPOTIFY_CLIENT_ID,
+                clientSecret: process.env.SPOTIFY_CLIENT_SECRET
+            }
+        }),
+        new YtDlpPlugin({ update: true })
+    ]
+});
+```
+
+**Plugins:**
+- **SpotifyPlugin** - Enables Spotify URL support and playlist imports
+- **YtDlpPlugin** - YouTube download and streaming with auto-updates
+
+### Event System
+
+The bot uses a dual event system for Discord client events and DisTube music events.
+
+#### Client Events
+
+Located in `/events/client/`, these handle Discord interactions:
+
+- **interactionCreate.js** - Processes button clicks for music controls
+- **messageCreate.js** - Handles prefix commands (r!play, r!skip, etc.)
+
+Client events are loaded by the event handler:
+
+```javascript handlers/events.js:6-17
+const clientEventsPath = path.join(__dirname, '../events/client');
+if (fs.existsSync(clientEventsPath)) {
+    const clientEventFiles = fs.readdirSync(clientEventsPath)
+        .filter(file => file.endsWith('.js') && file !== 'messageCreate.js');
+    
+    for (const file of clientEventFiles) {
+        const filePath = path.join(clientEventsPath, file);
+        const event = require(filePath);
+        if (typeof event === 'function') {
+            event(client);
+        }
+    }
+}
+```
+
+#### DisTube Events
+
+Located in `/events/distube/`, these handle music playback:
+
+- **playSong.js** - Triggered when a song starts playing
+- **error.js** - Handles playback errors
+- **debug.js** - Logs debug information
+- **setup.js** - Initializes DisTube configuration and connection handling
+
+```javascript events/distube/playSong.js:7-26
+client.distube.on('playSong', async (queue, song) => {
+    try {
+        const embed = createNowPlayingEmbed(song, queue);
+        const musicButtons = createMusicButtons();
+        const volumeButtons = createVolumeButtons();
+
+        const message = await queue.textChannel.send({
+            embeds: [embed],
+            components: [musicButtons, volumeButtons]
+        });
+
+        startProgressUpdater(message, queue, song);
+        
+        Logger.distube(`▶️ Reproduciendo: "${song.name}" [${song.formattedDuration}]`, 'playSong.js');
+        Logger.music(`Pedido por ${song.user.tag} en ${queue.textChannel.guild.name}`, 'playSong.js');
+    } catch (error) {
+        Logger.error('Error en playSong', error, 'playSong.js');
+        queue.textChannel.send('❌ Error al mostrar la información de la canción').catch(() => {});
+    }
+});
+```
+
+## Command Handling Flow
+
+### Command Registration
+
+Commands are automatically loaded from `/commands/music/` by the command handler:
+
+```javascript handlers/commands.js:4-23
+module.exports = (client) => {
+    const commandsPath = path.join(__dirname, '../commands');
+    const commandFolders = fs.readdirSync(commandsPath);
+
+    for (const folder of commandFolders) {
+        const folderPath = path.join(commandsPath, folder);
+        const commandFiles = fs.readdirSync(folderPath)
+            .filter(file => file.endsWith('.js'));
+        
+        for (const file of commandFiles) {
+            const filePath = path.join(folderPath, file);
+            const command = require(filePath);
+            if (command.name) {
+                client.commands.set(command.name, command);
+                console.log(`Comando cargado: ${command.name}`);
+            }
+        }
+    }
+};
+```
+
+### Command Execution
+
+Prefix-based commands are processed in `index.js`:
+
+```javascript index.js:52-68
+client.on('messageCreate', async message => {
+    if (message.author.bot || !message.content.startsWith(config.prefix)) return;
+
+    const args = message.content.slice(config.prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+    const command = client.commands.get(commandName);
+
+    if (command) {
+        Logger.command(commandName, message.author.tag, message.guild.name);
+        try {
+            await command.execute(message, args, client);
+        } catch (error) {
+            Logger.error(`Error ejecutando comando ${commandName}`, error, 'index.js');
+            message.reply('❌ Hubo un error al ejecutar el comando').catch(() => {});
+        }
+    }
+});
+```
+
+### Command Structure
+
+All commands follow this structure:
+
+```javascript
+module.exports = {
+    name: 'commandname',
+    description: 'Command description',
+    async execute(message, args, client) {
+        // Command logic
+    }
+};
+```
+
+## Voice Connection Handling
+
+### Connection Validation
+
+Commands validate voice channel permissions before execution:
+
+```javascript commands/music/play.js:10-29
+const voiceChannel = message.member.voice.channel;
+
+if (!voiceChannel) {
+    Logger.warn(`Usuario ${message.author.tag} intentó reproducir sin estar en canal de voz`, 'play.js');
+    const embed = createErrorEmbed(
+        'No estás en un canal de voz',
+        'Debes unirte a un canal de voz primero para reproducir música.'
+    );
+    return message.reply({ embeds: [embed] });
+}
+
+const permissions = voiceChannel.permissionsFor(client.user);
+if (!permissions.has('Connect') || !permissions.has('Speak')) {
+    Logger.error(`Permisos insuficientes en ${voiceChannel.name}`, null, 'play.js');
+    const embed = createErrorEmbed(
+        'Permisos insuficientes',
+        'No tengo permisos para conectarme o hablar en ese canal de voz.'
+    );
+    return message.reply({ embeds: [embed] });
+}
+```
+
+### Voice State Monitoring
+
+The bot monitors voice connection states to handle reconnections:
+
+```javascript events/distube/setup.js:19-28
+client.distube.on('playSong', (queue, song) => {
+    // Reiniciar el stream si hay error
+    if (queue.connection) {
+        queue.connection.on('stateChange', (oldState, newState) => {
+            if (newState.status === 'idle' || newState.status === 'disconnected') {
+                queue.resume();
+            }
+        });
+    }
+});
+```
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Discord Gateway                         │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Discord.js Client                          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Intents: Guilds, VoiceStates, Messages, Content    │  │
+│  └──────────────────────────────────────────────────────┘  │
+└───────┬─────────────────────────────────┬───────────────────┘
+        │                                 │
+        │                                 │
+        ▼                                 ▼
+┌──────────────────┐           ┌──────────────────────┐
+│  Event Handlers  │           │   Command Handler    │
+├──────────────────┤           ├──────────────────────┤
+│ • Client Events  │           │ • Command Loader     │
+│   - interaction  │           │ • Prefix Parser      │
+│   - message      │           │ • Executor           │
+│ • DisTube Events │           └──────────┬───────────┘
+│   - playSong     │                      │
+│   - error        │                      │
+│   - setup        │                      │
+└────┬─────────────┘                      │
+     │                                    │
+     │              ┌─────────────────────┘
+     │              │
+     ▼              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     DisTube Engine                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Plugins:                                            │  │
+│  │  • SpotifyPlugin - Spotify API integration           │  │
+│  │  • YtDlpPlugin - YouTube streaming                   │  │
+│  └──────────────────────────────────────────────────────┘  │
+└───────────┬─────────────────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Voice Connection                          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  @discordjs/voice - Audio streaming                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└───────────┬─────────────────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Utility Modules                             │
+├─────────────────────────────────────────────────────────────┤
+│ • embeds.js - Rich embed creation                           │
+│ • logger.js - Structured logging                            │
+│ • musicControls.js - Interactive button handlers            │
+│ • progressUpdater.js - Real-time embed updates              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Key Design Patterns
+
+### Modular Event System
+Events are separated by source (client vs. DisTube) and loaded dynamically, allowing easy addition of new event handlers.
+
+### Command Pattern
+Each command is a self-contained module with name, description, and execute function.
+
+### Factory Pattern
+Utility modules like `embeds.js` use factory functions to create consistent Discord embeds.
+
+### Observer Pattern
+Progress updater observes queue state changes and updates embeds every 10 seconds.
+
+## Configuration
+
+Bot configuration is centralized in `config.js`:
+
+```javascript config.js
+module.exports = {
+    prefix: 'r!',
+    presence: {
+        activities: [
+            { name: 'r!help ', type: 'LISTENING' }, 
+            { name: 'r!help para comandos', type: 'WATCHING' }
+        ],
+        status: 'idle' 
+    }
+};
+```
+
+Environment variables (`.env`) store sensitive data:
+- `TOKEN` - Discord bot token
+- `SPOTIFY_CLIENT_ID` - Spotify API client ID
+- `SPOTIFY_CLIENT_SECRET` - Spotify API client secret
+
+## Performance Considerations
+
+### Event Listener Management
+The bot increases the max listener limit to prevent memory warnings:
+
+```javascript index.js:8
+require('events').EventEmitter.defaultMaxListeners = 15;
+```
+
+### Progress Update Throttling
+Embed updates are throttled to 10-second intervals to avoid API rate limits:
+
+```javascript utils/progressUpdater.js:12
+const updateInterval = setInterval(async () => {
+    // Update logic
+}, 10000); // 10 seconds
+```
+
+### Memory Management
+Active progress updaters are tracked and cleaned up when queues stop to prevent memory leaks:
+
+```javascript utils/progressUpdater.js:43-50
+function stopProgressUpdater(queueId) {
+    const updater = activeUpdaters.get(queueId);
+    if (updater) {
+        clearInterval(updater.interval);
+        activeUpdaters.delete(queueId);
+        Logger.distube(`Detenido actualizador de progreso para cola ${queueId}`, 'progressUpdater.js');
+    }
+}
+```
